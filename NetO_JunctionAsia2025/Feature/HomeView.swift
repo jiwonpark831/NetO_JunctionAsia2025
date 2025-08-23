@@ -111,9 +111,7 @@ struct HomeView: View {
                             )
 
                     case .schedule:
-                        Text("스케줄 기능")
-                            .font(.title)
-                            .foregroundColor(.secondary)
+                       ScheduleView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
