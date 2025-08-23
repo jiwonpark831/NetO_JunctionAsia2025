@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		873331F52E5A5CF80074DE5E /* FSCalendar in Frameworks */ = {isa = PBXBuildFile; productRef = 873331F42E5A5CF80074DE5E /* FSCalendar */; };
 		87B607522E597EAB009518A2 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = 87B607512E597EAB009518A2 /* FirebaseAI */; };
 		87B607542E597EAB009518A2 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 87B607532E597EAB009518A2 /* FirebaseAnalytics */; };
 		87B607562E597EAB009518A2 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 87B607552E597EAB009518A2 /* FirebaseAnalyticsCore */; };
@@ -78,6 +79,7 @@
 				87B607682E597EAB009518A2 /* FirebaseFirestore in Frameworks */,
 				87B607762E597EAB009518A2 /* FirebaseMessaging in Frameworks */,
 				87B607722E597EAB009518A2 /* FirebaseInstallations in Frameworks */,
+				873331F52E5A5CF80074DE5E /* FSCalendar in Frameworks */,
 				87B608342E5A210B009518A2 /* Lottie in Frameworks */,
 				87B6076E2E597EAB009518A2 /* FirebaseFunctionsCombine-Community in Frameworks */,
 				87B6075E2E597EAB009518A2 /* FirebaseAuth in Frameworks */,
@@ -160,6 +162,7 @@
 				87B607A12E59F07A009518A2 /* GoogleSignIn */,
 				87B607A32E59F07A009518A2 /* GoogleSignInSwift */,
 				87B608332E5A210B009518A2 /* Lottie */,
+				873331F42E5A5CF80074DE5E /* FSCalendar */,
 			);
 			productName = NetO_JunctionAsia2025;
 			productReference = 87B607402E597AF5009518A2 /* NetO_JunctionAsia2025.app */;
@@ -193,6 +196,7 @@
 				87B607502E597EAB009518A2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				87B607A02E59F07A009518A2 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				87B608322E5A210B009518A2 /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				873331F32E5A5CF80074DE5E /* XCRemoteSwiftPackageReference "FSCalendar" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 87B607412E597AF5009518A2 /* Products */;
@@ -455,6 +459,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		873331F32E5A5CF80074DE5E /* XCRemoteSwiftPackageReference "FSCalendar" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/WenchaoD/FSCalendar.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.4;
+			};
+		};
 		87B607502E597EAB009518A2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -482,6 +494,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		873331F42E5A5CF80074DE5E /* FSCalendar */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 873331F32E5A5CF80074DE5E /* XCRemoteSwiftPackageReference "FSCalendar" */;
+			productName = FSCalendar;
+		};
 		87B607512E597EAB009518A2 /* FirebaseAI */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 87B607502E597EAB009518A2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
