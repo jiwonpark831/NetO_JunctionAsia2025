@@ -3,31 +3,78 @@
 //  NetO_JunctionAsia2025
 //
 //  Created by jiwon on 8/23/25.
-//  사용자 입력값 받는 뷰
+//
 
 import Combine
 import FirebaseAuth
 import FirebaseFirestore
 import SwiftUI
 
-enum MakeHouseStep: Int, CaseIterable {
-    case size
-    case floor_count
-    case room_count
-    case bathroom_count
-    case construction_type
-    case material_grade
-    case soil_condition
-    case access_condition
-    case noise_restriction
-    case pump_truck_restriction
-    case urban_area
-    case winter_construction
+// ✅ CapsuleSegmentedControl 추가
+struct CapsuleSegmentedControl: View {
+    let options: [String]
+    @Binding var selection: String
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(options, id: \.self) { option in
+                Button(action: {
+                    selection = option
+                }) {
+                    Text(option)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(selection == option ? .jaorange : .gray)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, minHeight: 60)
+                        .background(
+                            ZStack {
+                                if selection == option {
+                                    RoundedRectangle(cornerRadius: 30)
+                                        .fill(Color.white)
+                                        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                }
+                            }
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 30))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(6)
+        .background(Color(.systemGray5))
+        .clipShape(RoundedRectangle(cornerRadius: 35))
+    }
+}
 
+// ✅ 선택형 뷰 (PickerInputView 대체)
+struct CapsulePickerInputView: View {
+    let title: String
+    @Binding var selection: String
+    let options: [String]
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Text(title)
+                .font(.title2)
+                .fontWeight(.bold)
+                .multilineTextAlignment(.center)
+            
+            CapsuleSegmentedControl(options: options, selection: $selection)
+        }
+        .padding()
+    }
+}
+
+// MARK: - MakeHouseStep Enum
+enum MakeHouseStep: Int, CaseIterable {
+    case size, floor_count, room_count, bathroom_count
+    case construction_type, material_grade, soil_condition, access_condition
+    case noise_restriction, pump_truck_restriction, urban_area, winter_construction
+    
     var totalSteps: Int {
         return MakeHouseStep.allCases.count
     }
-
+    
     var title: String {
         switch self {
         case .size: "집의 크기는 몇 평으로 할까요?"
@@ -46,12 +93,14 @@ enum MakeHouseStep: Int, CaseIterable {
     }
 }
 
+// MARK: - MakeHouseStepData
 class MakeHouseStepData: ObservableObject, Codable {
 
     enum CodingKeys: String, CodingKey {
         case size, floor_count, room_count, bathroom_count, construction_type,
             material_grade, soil_condition, access_condition, noise_restriction,
-            pump_truck_restriction, urban_area, winter_construction
+            pump_truck_restriction, urban_area, winter_construction,
+            noise_restriction_string, pump_truck_restriction_string, urban_area_string, winter_construction_string
     }
 
     @Published var size: Int = 0
@@ -66,6 +115,12 @@ class MakeHouseStepData: ObservableObject, Codable {
     @Published var pump_truck_restriction: Bool? = nil
     @Published var urban_area: Bool? = nil
     @Published var winter_construction: Bool? = nil
+    
+    // 9번부터 12번까지의 문자열 속성들 (UI용)
+    @Published var noise_restriction_string: String = "모름"
+    @Published var pump_truck_restriction_string: String = "모름"
+    @Published var urban_area_string: String = "모름"
+    @Published var winter_construction_string: String = "모름"
 
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -108,6 +163,10 @@ class MakeHouseStepData: ObservableObject, Codable {
             Bool.self,
             forKey: .winter_construction
         )
+        noise_restriction_string = try container.decodeIfPresent(String.self, forKey: .noise_restriction_string) ?? "모름"
+        pump_truck_restriction_string = try container.decodeIfPresent(String.self, forKey: .pump_truck_restriction_string) ?? "모름"
+        urban_area_string = try container.decodeIfPresent(String.self, forKey: .urban_area_string) ?? "모름"
+        winter_construction_string = try container.decodeIfPresent(String.self, forKey: .winter_construction_string) ?? "모름"
     }
 
     func encode(to encoder: Encoder) throws {
@@ -133,10 +192,36 @@ class MakeHouseStepData: ObservableObject, Codable {
             winter_construction,
             forKey: .winter_construction
         )
+        try container.encode(noise_restriction_string, forKey: .noise_restriction_string)
+        try container.encode(pump_truck_restriction_string, forKey: .pump_truck_restriction_string)
+        try container.encode(urban_area_string, forKey: .urban_area_string)
+        try container.encode(winter_construction_string, forKey: .winter_construction_string)
     }
-    init() {}
+    init() {
+        noise_restriction_string = "모름"
+        pump_truck_restriction_string = "모름"
+        urban_area_string = "모름"
+        winter_construction_string = "모름"
+    }
+    
+    // Bool 값이 변경될 때 문자열 값도 동기화
+    func syncStringValues() {
+        if let noise = noise_restriction {
+            noise_restriction_string = noise ? "예" : "아니오"
+        }
+        if let pump = pump_truck_restriction {
+            pump_truck_restriction_string = pump ? "예" : "아니오"
+        }
+        if let urban = urban_area {
+            urban_area_string = urban ? "예" : "아니오"
+        }
+        if let winter = winter_construction {
+            winter_construction_string = winter ? "예" : "아니오"
+        }
+    }
 }
 
+// MARK: - MakeHouseView
 struct MakeHouseView: View {
     @State private var currentStep: MakeHouseStep = .size
     @StateObject private var stepData = MakeHouseStepData()
@@ -148,7 +233,7 @@ struct MakeHouseView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
-                // 커스텀 상단 바
+                // 상단 바
                 HStack {
                     Button(action: goToPreviousStep) {
                         HStack(spacing: 5) {
@@ -181,16 +266,16 @@ struct MakeHouseView: View {
                         )
                     )
 
-
-
                 Spacer()
-
                 navigationButtons
                     .padding()
             }
             .padding()
             .navigationBarBackButtonHidden(true)
             .toolbar(.hidden, for: .navigationBar)
+            .onAppear {
+                stepData.syncStringValues()
+            }
         }
     }
 
@@ -223,49 +308,71 @@ struct MakeHouseView: View {
                     unit: "개"
                 )
             case .construction_type:
-                PickerInputView(
+                CapsulePickerInputView(
                     title: step.title,
                     selection: $stepData.construction_type,
-                    options: ["철근콘크리트", "철골철근콘크리트", "철골조", "순철골", "목재구조", "벽돌구조", "경량철골"]
+                    options: ["Lightweight wooden structure", "Reinforced concrete", "Steelhouse"]
                 )
             case .material_grade:
-                PickerInputView(
+                CapsulePickerInputView(
                     title: step.title,
                     selection: $stepData.material_grade,
                     options: ["기본", "중급", "고급", "프리미엄"]
                 )
             case .soil_condition:
-                PickerInputView(
+                CapsulePickerInputView(
                     title: step.title,
                     selection: $stepData.soil_condition,
                     options: ["보통", "연약", "양호"]
                 )
             case .access_condition:
-                PickerInputView(
+                CapsulePickerInputView(
                     title: step.title,
                     selection: $stepData.access_condition,
                     options: ["양호", "보통", "제한적", "매우제한적"]
                 )
-            case .noise_restriction, .pump_truck_restriction, .urban_area,
-                .winter_construction:
-                BooleanInputView(
+            case .noise_restriction:
+                CapsulePickerInputView(
                     title: step.title,
-                    selection: binding(for: step)
+                    selection: $stepData.noise_restriction_string,
+                    options: ["예", "아니오", "모름"]
                 )
+                .onChange(of: stepData.noise_restriction_string) { newValue in
+                    stepData.noise_restriction = newValue == "예" ? true : (newValue == "아니오" ? false : nil)
+                }
+            case .pump_truck_restriction:
+                CapsulePickerInputView(
+                    title: step.title,
+                    selection: $stepData.pump_truck_restriction_string,
+                    options: ["예", "아니오", "모름"]
+                )
+                .onChange(of: stepData.pump_truck_restriction_string) { newValue in
+                    stepData.pump_truck_restriction = newValue == "예" ? true : (newValue == "아니오" ? false : nil)
+                }
+            case .urban_area:
+                CapsulePickerInputView(
+                    title: step.title,
+                    selection: $stepData.urban_area_string,
+                    options: ["예", "아니오", "모름"]
+                )
+                .onChange(of: stepData.urban_area_string) { newValue in
+                    stepData.urban_area = newValue == "예" ? true : (newValue == "아니오" ? false : nil)
+                }
+            case .winter_construction:
+                CapsulePickerInputView(
+                    title: step.title,
+                    selection: $stepData.winter_construction_string,
+                    options: ["예", "아니오", "모름"]
+                )
+                .onChange(of: stepData.winter_construction_string) { newValue in
+                    stepData.winter_construction = newValue == "예" ? true : (newValue == "아니오" ? false : nil)
+                }
             }
         }
         .environmentObject(stepData)
     }
 
-    private func binding(for step: MakeHouseStep) -> Binding<Bool?> {
-        switch step {
-        case .noise_restriction: return $stepData.noise_restriction
-        case .pump_truck_restriction: return $stepData.pump_truck_restriction
-        case .urban_area: return $stepData.urban_area
-        case .winter_construction: return $stepData.winter_construction
-        default: return .constant(nil)
-        }
-    }
+
 
     @ViewBuilder
     private var navigationButtons: some View {
@@ -291,25 +398,26 @@ struct MakeHouseView: View {
                         ) {
                             Text("결과 보기")
                                 .padding()
-                                .frame(maxWidth: .infinity)
+                                .frame(maxWidth: 128, maxHeight: 49)
                                 .background(.jaorange)
                                 .foregroundColor(.white)
                                 .cornerRadius(10)
                         }
                     } else {
                         Button(action: calculateEstimation) {
-                            HStack {
+                            HStack(spacing: 8) {
                                 if estimator.isLoading {
                                     ProgressView()
                                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                         .scaleEffect(0.8)
                                 } else {
                                     Image(systemName: "function")
+                                        .font(.system(size: 16, weight: .medium))
                                 }
                                 Text(estimator.isLoading ? "계산 중..." : "결과 보러가기")
                             }
                             .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: 128, maxHeight: 49)
                             .padding()
                             .background(.jaorange)
                             .cornerRadius(10)
@@ -356,7 +464,7 @@ struct MakeHouseView: View {
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let startDateString = dateFormatter.string(from: Date())
         
-        // 조건 태그 생성 (EstimationView와 동일)
+        // 조건 태그 생성
         var conditionTags: [String] = []
         if stepData.urban_area == true { conditionTags.append("도심") }
         if stepData.pump_truck_restriction == true { conditionTags.append("펌프카제한") }
@@ -512,55 +620,37 @@ struct StringInputView: View {
     }
 }
 
-struct PickerInputView: View {
-    let title: String
-    @Binding var selection: String
+struct SegmentedButtonView: View {
     let options: [String]
+    @Binding var selection: String
 
     var body: some View {
-        VStack(spacing: 20) {
-            Text(title)
-                .font(.title2)
-                .fontWeight(.bold)
-                .multilineTextAlignment(.center)
-
-            // 이미지처럼 하나의 컨테이너 안에 버튼들을 배치
-            VStack(spacing: 0) {
-                ForEach(options, id: \.self) { option in
-                    Button(action: {
-                        selection = option
-                    }) {
-                        HStack {
-                            Text(option)
-                                .font(.body)
-                                .foregroundColor(selection == option ? .white : .primary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .frame(maxWidth: .infinity)
-                        .background(selection == option ? .jaorange : Color.clear)
-                        .cornerRadius(0)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    
-                    // 마지막 버튼이 아닌 경우 구분선 추가
-                    if option != options.last {
-                        Divider()
-                            .background(Color(.systemGray4))
-                    }
+        HStack(spacing: 0) {
+            ForEach(options, id: \.self) { option in
+                Button(action: {
+                    selection = option
+                }) {
+                    Text(option)
+                        .font(.body)
+                        .foregroundColor(selection == option ? .jaorange : .secondary)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(
+                            RoundedRectangle(cornerRadius: 22)
+                                .fill(selection == option ? Color.white : Color.clear)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 22)
+                                .stroke(Color(.systemGray4), lineWidth: selection == option ? 0 : 1)
+                        )
                 }
             }
-            .background(Color(.systemGray6))
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color(.systemGray4), lineWidth: 1)
-            )
         }
-        .padding()
+        .padding(4)
+        .background(Color(.systemGray6))
+        .cornerRadius(25)
     }
 }
+
 
 struct BooleanInputView: View {
     let title: String
@@ -653,19 +743,19 @@ struct SummaryView: View {
                     SummaryRow(label: "진입 여건", value: stepData.access_condition)
                     SummaryRow(
                         label: "소음 제한",
-                        value: boolToString(stepData.noise_restriction)
+                        value: stepData.noise_restriction_string
                     )
                     SummaryRow(
                         label: "펌프카 제한",
-                        value: boolToString(stepData.pump_truck_restriction)
+                        value: stepData.pump_truck_restriction_string
                     )
                     SummaryRow(
                         label: "도심지",
-                        value: boolToString(stepData.urban_area)
+                        value: stepData.urban_area_string
                     )
                     SummaryRow(
                         label: "동절기 공사",
-                        value: boolToString(stepData.winter_construction)
+                        value: stepData.winter_construction_string
                     )
                 }
 
@@ -774,6 +864,14 @@ struct SummaryView: View {
             return value ? "예" : "아니오"
         }
         return "모름"
+    }
+    
+    private func stringToBool(_ value: String) -> Bool? {
+        switch value {
+        case "예": return true
+        case "아니오": return false
+        default: return nil
+        }
     }
 
     private func saveToFirebase() {

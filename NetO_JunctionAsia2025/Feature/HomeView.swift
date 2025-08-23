@@ -111,7 +111,9 @@ struct HomeView: View {
                             )
 
                     case .schedule:
-                        EstimationView()
+                        Text("스케줄 기능")
+                            .font(.title)
+                            .foregroundColor(.secondary)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
