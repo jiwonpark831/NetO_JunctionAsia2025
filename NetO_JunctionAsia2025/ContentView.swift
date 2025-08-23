@@ -12,32 +12,21 @@ struct ContentView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            // 견적 계산 탭
-            EstimationView()
-                .tabItem {
-                    Image(systemName: "calculator")
-                    Text("견적 계산")
-                }
-                .tag(0)
-            
-            // 기존 기능들
+            // 홈 탭
             HomeView()
                 .tabItem {
                     Image(systemName: "house")
                     Text("홈")
                 }
-                .tag(1)
+                .tag(0)
             
-
-            
-
-            
+            // 경매 탭
             AuctionView()
                 .tabItem {
                     Image(systemName: "gavel")
                     Text("경매")
                 }
-                .tag(2)
+                .tag(1)
         }
         .accentColor(.blue)
     }

@@ -78,13 +78,11 @@ open NetO_JunctionAsia2025.xcodeproj
 
 ## 📱 사용법
 
-### 견적 계산하기
-1. **견적 계산** 탭 선택
-2. 프로젝트 기본 정보 입력 (평수, 층수, 방 개수 등)
-3. 구조 및 자재 등급 선택
-4. 특수 조건 체크 (도심, 펌프카제한 등)
-5. **견적 계산** 버튼 클릭
-6. 결과 확인 (공사 기간, 비용, 평당 단가)
+### 홈 기능 사용하기
+1. **홈** 탭 선택
+2. 사용자 정보 확인
+3. BID, Home, Schedule 탭 전환
+4. 건축 계획 시작 버튼으로 MakeHouseView 이동
 
 
 
@@ -116,8 +114,8 @@ NetO_JunctionAsia2025/
 ├── Services/
 │   └── StandardPriceLoader.swift     # 표준단가 로더
 ├── Feature/
-│   ├── EstimationView.swift          # 견적 계산 뷰
-│   ├── EstimationResultView.swift    # 견적 결과 뷰
+│   ├── HomeView.swift                # 홈 뷰
+│   ├── AuctionView.swift             # 경매 뷰
 
 
 ├── Config/
