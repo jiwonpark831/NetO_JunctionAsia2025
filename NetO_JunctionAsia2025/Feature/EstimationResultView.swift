@@ -239,7 +239,7 @@ struct ConfidenceIntervalCard: View {
                     Text("범위")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text("\(upper - lower)\(unit)")
+                    Text(formatRange(upper: upper, lower: lower, unit: unit))
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
@@ -257,6 +257,15 @@ struct ConfidenceIntervalCard: View {
             return formatCurrency(value)
         } else {
             return "\(value)\(unit)"
+        }
+    }
+    
+    private func formatRange(upper: Int, lower: Int, unit: String) -> String {
+        let range = upper - lower
+        if unit == "원" {
+            return formatCurrency(range)
+        } else {
+            return "\(range)\(unit)"
         }
     }
 }
@@ -363,12 +372,117 @@ private func formatCurrency(_ amount: Int) -> String {
     let formatter = NumberFormatter()
     formatter.numberStyle = .decimal
     formatter.groupingSeparator = ","
+    formatter.maximumFractionDigits = 0 // 소수점 제거
     
-    if amount >= 10000 {
-        let man = Double(amount) / 10000.0
-        return "\(formatter.string(from: NSNumber(value: man)) ?? "0")만원"
+    if amount >= 100000000 { // 1억 이상
+        let eok = amount / 100000000
+        let remaining = amount % 100000000
+        
+        if remaining == 0 {
+            return "\(eok)억원"
+        } else if remaining >= 10000000 { // 천만 이상
+            let cheon = remaining / 10000000
+            let remaining2 = remaining % 10000000
+            
+            if remaining2 == 0 {
+                return "\(eok)억 \(cheon)천만원"
+            } else if remaining2 >= 1000000 { // 백만 이상
+                let baek = remaining2 / 1000000
+                let remaining3 = remaining2 % 1000000
+                
+                if remaining3 == 0 {
+                    return "\(eok)억 \(cheon)천 \(baek)백만원"
+                } else {
+                    let man = remaining3 / 10000
+                    if remaining3 % 10000 == 0 {
+                        return "\(eok)억 \(cheon)천 \(baek)백 \(man)만원"
+                    } else {
+                        return "\(eok)억 \(cheon)천 \(baek)백 \(man)만 \(remaining3 % 10000)원"
+                    }
+                }
+            } else {
+                let man = remaining2 / 10000
+                if remaining2 % 10000 == 0 {
+                    return "\(eok)억 \(cheon)천 \(man)만원"
+                } else {
+                    return "\(eok)억 \(cheon)천 \(man)만 \(remaining2 % 10000)원"
+                }
+            }
+        } else if remaining >= 1000000 { // 백만 이상
+            let baek = remaining / 1000000
+            let remaining2 = remaining % 1000000
+            
+            if remaining2 == 0 {
+                return "\(eok)억 \(baek)백만원"
+            } else {
+                let man = remaining2 / 10000
+                if remaining2 % 10000 == 0 {
+                    return "\(eok)억 \(baek)백 \(man)만원"
+                } else {
+                    return "\(eok)억 \(baek)백 \(man)만 \(remaining2 % 10000)원"
+                }
+            }
+        } else {
+            let man = remaining / 10000
+            if remaining % 10000 == 0 {
+                return "\(eok)억 \(man)만원"
+            } else {
+                return "\(eok)억 \(man)만 \(remaining % 10000)원"
+            }
+        }
+    } else if amount >= 10000000 { // 천만 이상
+        let cheon = amount / 10000000
+        let remaining = amount % 10000000
+        
+        if remaining == 0 {
+            return "\(cheon)천만원"
+        } else if remaining >= 1000000 { // 백만 이상
+            let baek = remaining / 1000000
+            let remaining2 = remaining % 1000000
+            
+            if remaining2 == 0 {
+                return "\(cheon)천 \(baek)백만원"
+            } else {
+                let man = remaining2 / 10000
+                if remaining2 % 10000 == 0 {
+                    return "\(cheon)천 \(baek)백 \(man)만원"
+                } else {
+                    return "\(cheon)천 \(baek)백 \(man)만 \(remaining2 % 10000)원"
+                }
+            }
+        } else {
+            let man = remaining / 10000
+            if remaining % 10000 == 0 {
+                return "\(cheon)천 \(man)만원"
+            } else {
+                return "\(cheon)천 \(man)만 \(remaining % 10000)원"
+            }
+        }
+    } else if amount >= 1000000 { // 백만 이상
+        let baek = amount / 1000000
+        let remaining = amount % 1000000
+        
+        if remaining == 0 {
+            return "\(baek)백만원"
+        } else {
+            let man = remaining / 10000
+            if remaining % 10000 == 0 {
+                return "\(baek)백 \(man)만원"
+            } else {
+                return "\(baek)백 \(man)만 \(remaining % 10000)원"
+            }
+        }
+    } else if amount >= 10000 { // 만 이상
+        let man = amount / 10000
+        let remaining = amount % 10000
+        
+        if remaining == 0 {
+            return "\(man)만원"
+        } else {
+            return "\(man)만 \(remaining)원"
+        }
     } else {
-        return "\(formatter.string(from: NSNumber(value: amount)) ?? "0")원"
+        return "\(amount)원"
     }
 }
 

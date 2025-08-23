@@ -70,13 +70,9 @@ struct HomeView: View {
                         AuctionView()
                     case .home:
                         MainView()
-                        NavigationLink(
-                            "Make My House",
-                            destination: MakeHouseView()
-                        )
 
                     case .schedule:
-                        ScheduleView()
+                        EstimationView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

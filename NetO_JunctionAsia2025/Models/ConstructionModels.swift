@@ -14,6 +14,50 @@ struct EstimationResponse: Codable {
     }
 }
 
+// MARK: - Firebase Functions 실제 응답 구조 (새로 추가)
+struct FirebaseEstimationResponse: Codable {
+    let cost_prediction: Double
+    let duration_prediction: Double
+    let cost_confidence: ConfidenceRange
+    let duration_confidence: ConfidenceRange
+    let input_data: FirebaseInputData
+    let prediction_timestamp: String
+    
+    enum CodingKeys: String, CodingKey {
+        case cost_prediction
+        case duration_prediction
+        case cost_confidence
+        case duration_confidence
+        case input_data
+        case prediction_timestamp
+    }
+}
+
+struct ConfidenceRange: Codable {
+    let lower: Double
+    let upper: Double
+}
+
+struct FirebaseInputData: Codable {
+    let soil_condition: String
+    let access_condition: String
+    let pump_truck_restriction: Bool
+    let noise_restriction: Bool
+    let total_rooms: Int
+    let condition_tags: [String]
+    let material_grade: String
+    let start_date: String
+    let winter_construction: Bool
+    let project_type: String
+    let timestamp: Double
+    let size: Int
+    let floor_count: Int
+    let bathroom_count: Int
+    let urban_area: Bool
+    let room_count: Int
+    let construction_type: String
+}
+
 struct Predictions: Codable {
     let total_cost_krw: Int
     let total_duration_days: Int
@@ -237,15 +281,50 @@ class ConstructionEstimator: ObservableObject {
                 
                 if httpResponse.statusCode == 200 {
                     do {
-                        // Firebase Functions 응답 구조로 파싱
-                        let estimation = try JSONDecoder().decode(EstimationResponse.self, from: data)
+                        // 먼저 새로운 Firebase Functions 응답 구조로 파싱 시도
+                        let firebaseResponse = try JSONDecoder().decode(FirebaseEstimationResponse.self, from: data)
+                        
+                        // Firebase 응답을 기존 구조로 변환
+                        let estimation = EstimationResponse(
+                            predictions: Predictions(
+                                total_cost_krw: Int(firebaseResponse.cost_prediction),
+                                total_duration_days: Int(firebaseResponse.duration_prediction),
+                                cost_confidence_interval: ConfidenceInterval(
+                                    lower: Int(firebaseResponse.cost_confidence.lower),
+                                    upper: Int(firebaseResponse.cost_confidence.upper)
+                                ),
+                                duration_confidence_interval: ConfidenceInterval(
+                                    lower: Int(firebaseResponse.duration_confidence.lower),
+                                    upper: Int(firebaseResponse.duration_confidence.upper)
+                                )
+                            ),
+                            input_features: InputFeatures(
+                                area: firebaseResponse.input_data.size,
+                                floors: firebaseResponse.input_data.floor_count,
+                                construction_type: firebaseResponse.input_data.construction_type,
+                                location: "Firebase ML",
+                                complexity: "ML 예측",
+                                material_grade: firebaseResponse.input_data.material_grade,
+                                access_condition: firebaseResponse.input_data.access_condition,
+                                noise_restriction: firebaseResponse.input_data.noise_restriction,
+                                pump_truck_restriction: firebaseResponse.input_data.pump_truck_restriction,
+                                urban_area: firebaseResponse.input_data.urban_area,
+                                winter_construction: firebaseResponse.input_data.winter_construction
+                            ),
+                            model_info: ModelInfo(
+                                model_name: "Firebase ML 모델",
+                                version: "1.0.0",
+                                accuracy: 85.0,
+                                training_date: firebaseResponse.prediction_timestamp
+                            )
+                        )
                         
                         await MainActor.run {
                             self.estimation = estimation
                             self.isLoading = false
                         }
                         
-                        print("✅ Firebase Functions 견적 성공")
+                        print("✅ Firebase Functions 견적 성공 (새로운 구조)")
                         
                     } catch let parsingError {
                         print("⚠️ Firebase Functions 응답 파싱 실패: \(parsingError)")
