@@ -18,25 +18,31 @@ enum Stage {
 struct MainView: View {
 
     @State private var currentStage: Stage = .basic
-    @State private var progress = 0.0
+    @State private var progress = 25
 
     var body: some View {
         VStack {
             switch currentStage {
             case .basic:
-                LottieLaunchView(
-                    animationName: "dummylottie",
-                    loopMode: .loop
-                )
-                .frame(width: 100)
+                //                LottieLaunchView(
+                //                    animationName: "dummylottie",
+                //                    loopMode: .loop
+                //                )
+                Image("stage1")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 250, height: 250)
             case .bone:
-                Text("Bone Stage")
+                Image("stage2")
             case .faility:
-                Text("Faility Stage")
+                Image("stage3")
             case .final:
-                Text("Final Stage")
+                Image("stage4")
             }
-            Text("\(progress)%")
+            Text("progress").foregroundStyle(.gray).padding(10)
+            Text("\(progress)%").foregroundStyle(.jaorange).font(
+                .system(size: 20, weight: .bold)
+            )
 
         }
     }

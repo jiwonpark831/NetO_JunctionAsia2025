@@ -20,49 +20,67 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading) {
-                Image("logo")
+
+                Image("archlogo").padding(20)
+
                 HStack {
-                    Text("Welcome," + "\(manager.userData.username)")
+                    VStack {
+                        Text("Welcome,")
+                        Text("\(manager.userData.username)").font(
+                            .system(size: 16, weight: .bold)
+                        )
+                    }.padding(.leading, 20)
+                    Spacer()
                     Button {
                     } label: {
-                        Image(systemName: "bell.fill")
+                        Image(systemName: "bell.fill").foregroundStyle(.black)
+                            .font(.system(size: 20))
+                    }.padding(.trailing, 20)
+                }
+
+                ZStack {
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            .white, .jayellow,
+                        ]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ).frame(height: 70)
+                    HStack {
+                        Button(action: {
+                            selectedTab = .bid
+                        }) {
+                            Text("BID")
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .foregroundStyle(
+                                    selectedTab == .bid ? .jaorange : .gray
+                                )
+                        }
+
+                        Button(action: {
+                            selectedTab = .home
+                        }) {
+                            Text("Home")
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .foregroundStyle(
+                                    selectedTab == .home ? .jaorange : .gray
+                                )
+                        }
+
+                        Button(action: {
+                            selectedTab = .schedule
+                        }) {
+                            Text("SCHEDULE")
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .foregroundStyle(
+                                    selectedTab == .schedule ? .jaorange : .gray
+                                )
+                        }
                     }
                 }
-                HStack {
-                    Button(action: {
-                        selectedTab = .bid
-                    }) {
-                        Text("BID")
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .foregroundStyle(
-                                selectedTab == .bid ? .orange : .gray
-                            )
-                    }
-
-                    Button(action: {
-                        selectedTab = .home
-                    }) {
-                        Text("Home")
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .foregroundStyle(
-                                selectedTab == .home ? .orange : .gray
-                            )
-                    }
-
-                    Button(action: {
-                        selectedTab = .schedule
-                    }) {
-                        Text("SCHEDULE")
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .foregroundStyle(
-                                selectedTab == .schedule ? .orange : .gray
-                            )
-                    }
-                }
-                Divider()
 
                 VStack {
                     switch selectedTab {
@@ -70,10 +88,27 @@ struct HomeView: View {
                         AuctionView()
                     case .home:
                         MainView()
+                        Spacer().frame(height: 70)
                         NavigationLink(
-                            "Make My House",
+                            "LET’S GET PLANNED",
                             destination: MakeHouseView()
-                        )
+                        ).frame(maxWidth: 200)
+                            .padding(.vertical, 14)
+                            .fontWeight(.black)
+                            .font(.system(size: 15))
+                            .foregroundColor(.white)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [
+                                                .jaorange, .jayellow,
+                                            ]),
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                            )
 
                     case .schedule:
                         ScheduleView()
