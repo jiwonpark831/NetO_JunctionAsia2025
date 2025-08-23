@@ -5,20 +5,33 @@
 //  Created by jiwon on 8/23/25.
 //
 
-import Firebase
+import FirebaseAuth
+import FirebaseCore
+import GoogleSignIn
 import SwiftUI
 
-//class AppDelegate: NSObject, UIApplicationDelegate {
-//  func application(_ application: UIApplication,
-//                   didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-//    FirebaseApp.configure()
-//
-//    return true
-//  }
-//}
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication
+            .LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        FirebaseApp.configure()
+
+        return true
+    }
+}
+
+func application(
+    _ app: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+) -> Bool {
+    return GIDSignIn.sharedInstance.handle(url)
+}
 
 @main
-struct NetOApp: App {
+struct NetO_JunctionAsia2025App: App {
 
     init() {
         FirebaseApp.configure()
@@ -28,7 +41,10 @@ struct NetOApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LoginView()
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
     }
 }
