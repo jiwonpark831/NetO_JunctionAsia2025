@@ -140,14 +140,33 @@ class MakeHouseStepData: ObservableObject, Codable {
 struct MakeHouseView: View {
     @State private var currentStep: MakeHouseStep = .size
     @StateObject private var stepData = MakeHouseStepData()
+    @StateObject private var estimator = ConstructionEstimator()
+    @State private var showEstimation = false
+    @State private var navigateToSummary = false
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 20) {
+                // 커스텀 상단 바
+                HStack {
+                    Button(action: goToPreviousStep) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "chevron.left")
+                            Text("이전")
+                        }
+                        .foregroundColor(.jaorange)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.top, 10)
+                
                 ProgressView(
                     value: Double(currentStep.rawValue + 1),
                     total: Double(currentStep.totalSteps)
                 )
+                .tint(.jaorange)
 
                 Text("\(currentStep.rawValue + 1) / \(currentStep.totalSteps)")
                     .font(.caption)
@@ -162,12 +181,16 @@ struct MakeHouseView: View {
                         )
                     )
 
+
+
                 Spacer()
 
                 navigationButtons
                     .padding()
             }
-            .navigationBarTitleDisplayMode(.inline)
+            .padding()
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 
@@ -203,25 +226,25 @@ struct MakeHouseView: View {
                 PickerInputView(
                     title: step.title,
                     selection: $stepData.construction_type,
-                    options: ["경량목구조", "철근콘크리트", "스틸하우스"]
+                    options: ["철근콘크리트", "철골철근콘크리트", "철골조", "순철골", "목재구조", "벽돌구조", "경량철골"]
                 )
             case .material_grade:
                 PickerInputView(
                     title: step.title,
                     selection: $stepData.material_grade,
-                    options: ["표준", "고급", "최고급"]
+                    options: ["기본", "중급", "고급", "프리미엄"]
                 )
             case .soil_condition:
                 PickerInputView(
                     title: step.title,
                     selection: $stepData.soil_condition,
-                    options: ["일반", "연약지반", "암반"]
+                    options: ["보통", "연약", "양호"]
                 )
             case .access_condition:
                 PickerInputView(
                     title: step.title,
                     selection: $stepData.access_condition,
-                    options: ["양호", "보통", "불량"]
+                    options: ["양호", "보통", "제한적", "매우제한적"]
                 )
             case .noise_restriction, .pump_truck_restriction, .urban_area,
                 .winter_construction:
@@ -247,39 +270,63 @@ struct MakeHouseView: View {
     @ViewBuilder
     private var navigationButtons: some View {
         HStack {
-            if currentStep.rawValue > 0 {
-                Button("이전") {
-                    goToPreviousStep()
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.gray.opacity(0.2))
-                .foregroundColor(.primary)
-                .cornerRadius(10)
-            }
-
             if currentStep.rawValue < currentStep.totalSteps - 1 {
-                Button("다음") {
-                    goToNextStep()
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-            } else {
-                NavigationLink(
-                    destination: SummaryView().environmentObject(stepData)
-                ) {
-                    Text("결과 보기 및 저장")
+                Button(action: goToNextStep) {
+                    Text("다음")
                         .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.green)
+                        .frame(maxWidth: 128, maxHeight: 49)
+                        .background(.jaorange)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                 }
+                .buttonStyle(PlainButtonStyle())
+            } else {
+                VStack(spacing: 10) {
+                    if estimator.estimation != nil {
+                        NavigationLink(
+                            destination: SummaryView()
+                                .environmentObject(stepData)
+                                .environmentObject(estimator),
+                            isActive: $navigateToSummary
+                        ) {
+                            Text("결과 보기")
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(.jaorange)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        }
+                    } else {
+                        Button(action: calculateEstimation) {
+                            HStack {
+                                if estimator.isLoading {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Image(systemName: "function")
+                                }
+                                Text(estimator.isLoading ? "계산 중..." : "결과 보러가기")
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(.jaorange)
+                            .cornerRadius(10)
+                        }
+                        .disabled(estimator.isLoading || !isFormValid)
+                        .opacity(isFormValid ? 1.0 : 0.6)
+                    }
+                }
             }
         }
+    }
+
+    private var isFormValid: Bool {
+        stepData.size > 0 && stepData.floor_count > 0 && stepData.room_count > 0 && 
+        stepData.bathroom_count > 0 && !stepData.construction_type.isEmpty && 
+        !stepData.material_grade.isEmpty && !stepData.soil_condition.isEmpty && 
+        !stepData.access_condition.isEmpty
     }
 
     private func goToNextStep() {
@@ -291,10 +338,109 @@ struct MakeHouseView: View {
     }
 
     private func goToPreviousStep() {
-        guard let prevStep = MakeHouseStep(rawValue: currentStep.rawValue - 1)
-        else { return }
-        withAnimation {
-            currentStep = prevStep
+        if currentStep.rawValue > 0 {
+            // 이전 단계로 이동
+            guard let prevStep = MakeHouseStep(rawValue: currentStep.rawValue - 1)
+            else { return }
+            withAnimation {
+                currentStep = prevStep
+            }
+        } else {
+            // 첫 화면이면 이전 화면으로 돌아가기
+            dismiss()
+        }
+    }
+    
+    private func calculateEstimation() {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let startDateString = dateFormatter.string(from: Date())
+        
+        // 조건 태그 생성 (EstimationView와 동일)
+        var conditionTags: [String] = []
+        if stepData.urban_area == true { conditionTags.append("도심") }
+        if stepData.pump_truck_restriction == true { conditionTags.append("펌프카제한") }
+        if stepData.noise_restriction == true { conditionTags.append("소음규제") }
+        if stepData.soil_condition == "연약" { conditionTags.append("지반연약") }
+        if stepData.access_condition == "양호" { conditionTags.append("장비양호") }
+        
+        let request = EstimationRequest(
+            startDate: startDateString,
+            size: stepData.size,
+            floor_count: stepData.floor_count,
+            room_count: stepData.room_count,
+            bathroom_count: stepData.bathroom_count,
+            construction_type: stepData.construction_type,
+            material_grade: stepData.material_grade,
+            soil_condition: stepData.soil_condition,
+            conditionTags: conditionTags,
+            accessCondition: stepData.access_condition,
+            noiseRestriction: stepData.noise_restriction ?? false,
+            pumpTruckRestriction: stepData.pump_truck_restriction ?? false,
+            urbanArea: stepData.urban_area ?? false,
+            winterConstruction: stepData.winter_construction ?? false
+        )
+        
+        // ML 모델 호출 시도
+        Task {
+            do {
+                try await estimator.estimate(request)
+                await MainActor.run {
+                    showEstimation = true
+                    // 계산 완료 후 자동으로 결과 화면으로 이동
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        navigateToSummary = true
+                    }
+                }
+            } catch {
+                // ML 모델 실패 시 로컬 견적으로 폴백
+                await performLocalEstimation(request)
+            }
+        }
+    }
+    
+    private func performLocalEstimation(_ request: EstimationRequest) async {
+        let localEstimation = estimator.estimateLocal(request)
+        await MainActor.run {
+            // 로컬 견적을 새로운 구조로 변환
+            estimator.estimation = EstimationResponse(
+                predictions: Predictions(
+                    total_cost_krw: localEstimation.costKRW,
+                    total_duration_days: Int(localEstimation.durationDays),
+                    cost_confidence_interval: ConfidenceInterval(
+                        lower: Int(Double(localEstimation.costKRW) * 0.85),
+                        upper: Int(Double(localEstimation.costKRW) * 1.15)
+                    ),
+                    duration_confidence_interval: ConfidenceInterval(
+                        lower: Int(localEstimation.durationDays * 0.8),
+                        upper: Int(localEstimation.durationDays * 1.2)
+                    )
+                ),
+                input_features: InputFeatures(
+                    area: stepData.size,
+                    floors: stepData.floor_count,
+                    construction_type: stepData.construction_type,
+                    location: "로컬",
+                    complexity: "보통",
+                    material_grade: stepData.material_grade,
+                    access_condition: stepData.access_condition,
+                    noise_restriction: stepData.noise_restriction,
+                    pump_truck_restriction: stepData.pump_truck_restriction,
+                    urban_area: stepData.urban_area,
+                    winter_construction: stepData.winter_construction
+                ),
+                model_info: ModelInfo(
+                    model_name: "로컬 계산기",
+                    version: "1.0.0",
+                    accuracy: 75.0,
+                    training_date: "N/A"
+                )
+            )
+            showEstimation = true
+            // 로컬 견적 계산 완료 후 자동으로 결과 화면으로 이동
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                navigateToSummary = true
+            }
         }
     }
 }
@@ -303,6 +449,7 @@ struct NumberInputView: View {
     let title: String
     @Binding var value: Int
     let unit: String
+    @State private var textValue: String = ""
 
     var body: some View {
         VStack(spacing: 15) {
@@ -312,11 +459,23 @@ struct NumberInputView: View {
                 .multilineTextAlignment(.center)
 
             HStack {
-                TextField("숫자 입력", value: $value, format: .number)
+                TextField("숫자 입력", text: $textValue)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.center)
                     .font(.title)
+                    .onAppear {
+                        // 초기값이 0이면 빈 문자열로 표시
+                        textValue = value == 0 ? "" : "\(value)"
+                    }
+                    .onChange(of: textValue) { newValue in
+                        // 텍스트가 변경될 때마다 Int 값 업데이트
+                        if let intValue = Int(newValue) {
+                            value = intValue
+                        } else if newValue.isEmpty {
+                            value = 0
+                        }
+                    }
                 Text(unit)
                     .font(.headline)
             }
@@ -365,12 +524,39 @@ struct PickerInputView: View {
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
 
-            Picker(title, selection: $selection) {
+            // 이미지처럼 하나의 컨테이너 안에 버튼들을 배치
+            VStack(spacing: 0) {
                 ForEach(options, id: \.self) { option in
-                    Text(option)
+                    Button(action: {
+                        selection = option
+                    }) {
+                        HStack {
+                            Text(option)
+                                .font(.body)
+                                .foregroundColor(selection == option ? .white : .primary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .frame(maxWidth: .infinity)
+                        .background(selection == option ? .jaorange : Color.clear)
+                        .cornerRadius(0)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    // 마지막 버튼이 아닌 경우 구분선 추가
+                    if option != options.last {
+                        Divider()
+                            .background(Color(.systemGray4))
+                    }
                 }
             }
-            .pickerStyle(SegmentedPickerStyle())
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color(.systemGray4), lineWidth: 1)
+            )
         }
         .padding()
     }
@@ -437,6 +623,7 @@ struct BooleanInputView: View {
 
 struct SummaryView: View {
     @EnvironmentObject var stepData: MakeHouseStepData
+    @EnvironmentObject var estimator: ConstructionEstimator
     @State private var isSaving = false
     @State private var alertMessage: String?
     @State private var showAlert = false
@@ -483,18 +670,90 @@ struct SummaryView: View {
                 }
 
                 Spacer(minLength: 30)
+                
+                // 견적 결과 표시
+                if let estimation = estimator.estimation {
+                    VStack(alignment: .leading, spacing: 15) {
+                        Text("견적 결과")
+                            .font(.title2).bold()
+                            .padding(.bottom, 10)
+                        
+                        VStack(spacing: 12) {
+                            HStack {
+                                Text("예상 공사 비용")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("\(estimation.predictions.total_cost_krw)원")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.jaorange)
+                            }
+                            
+                            HStack {
+                                Text("예상 공사 기간")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("\(estimation.predictions.total_duration_days)일")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.jayellow)
+                            }
+                            
+                            if let modelInfo = estimation.model_info {
+                                HStack {
+                                    Text("계산 방식")
+                                        .font(.headline)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text(modelInfo.model_name ?? "알 수 없음")
+                                        .font(.body)
+                                        .foregroundColor(.primary)
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                    }
+                } else {
+                    // 견적이 계산되지 않은 경우 안내 메시지
+                    VStack(alignment: .leading, spacing: 15) {
+                        Text("견적 계산이 필요합니다")
+                            .font(.title2).bold()
+                            .padding(.bottom, 10)
+                        
+                        Text("정확한 견적을 위해 '견적 계산' 버튼을 먼저 눌러주세요.")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                }
+                
+                // 오류 메시지 표시
+                if let errorMessage = estimator.errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .padding()
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(8)
+                }
 
                 Button(action: saveToFirebase) {
                     if isSaving {
                         ProgressView()
                     } else {
-                        Text("Firebase에 저장하기")
+                        Text("입찰하러가기")
                     }
                 }
                 .disabled(isSaving)
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(isSaving ? Color.gray : Color.green)
+                .background(isSaving ? Color.gray : .jaorange)
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
@@ -529,12 +788,20 @@ struct SummaryView: View {
         let userDocRef = db.collection("users").document(userId)
 
         do {
-            let data = try Firestore.Encoder().encode(stepData)
+            let houseData = try Firestore.Encoder().encode(stepData)
+            
+            var saveData: [String: Any] = [
+                "houseData": FieldValue.arrayUnion([houseData]),
+                "timestamp": FieldValue.serverTimestamp()
+            ]
+            
+            // 견적 결과가 있으면 함께 저장
+            if let estimation = estimator.estimation {
+                let estimationData = try Firestore.Encoder().encode(estimation)
+                saveData["estimationData"] = FieldValue.arrayUnion([estimationData])
+            }
 
-            userDocRef.setData(
-                ["houseData": FieldValue.arrayUnion([data])],
-                merge: true
-            ) { error in
+            userDocRef.setData(saveData, merge: true) { error in
                 isSaving = false
                 if let error = error {
                     alertMessage = "저장 실패: \(error.localizedDescription)"
@@ -545,7 +812,7 @@ struct SummaryView: View {
             }
         } catch let error {
             isSaving = false
-            alertMessage = "데이터 인코딩 실패: \(error.localizedDescription)"
+            alertMessage = "데이터 저장 실패: \(error.localizedDescription)"
             showAlert = true
         }
     }
