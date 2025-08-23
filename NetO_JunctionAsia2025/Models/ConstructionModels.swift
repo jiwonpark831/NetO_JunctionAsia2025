@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 
 // MARK: - Firebase Functions 응답 모델 (새로운 구조)
 struct EstimationResponse: Codable {
