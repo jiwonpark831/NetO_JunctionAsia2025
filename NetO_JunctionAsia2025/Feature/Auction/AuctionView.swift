@@ -8,32 +8,44 @@
 import SwiftUI
 
 struct AuctionView: View {
-    @State private var selectedSubcategory: String? = nil
+    @State private var selectedCategory: CategorySelection? = nil
+    //    @State private var selectedSubcategory: String? = nil
     @State private var path: [String] = []
-
+    
     var body: some View {
         NavigationStack(path: $path) {
-                    VStack {
-                        NavigationLink(value: "categorySelect") {
-                            Text(selectedSubcategory ?? "What service do you need?")
-                                .foregroundColor(Color(hex: "626262"))
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color(hex: "F2F2F2"))
-                                .cornerRadius(5)
-                        }
+            VStack {
+                NavigationLink(value: "categorySelect") {
+                    HStack {
+                        Image(systemName: "line.3.horizontal.decrease")
+                            .foregroundColor(Color(hex: "626262"))
+                        
+                        Spacer()
+                        Text(selectedCategory?.sub ?? "What service do you need?")
+                            .foregroundColor(Color(hex: "626262"))
+                        Spacer()
                     }
-                    .padding(.horizontal, 45)
-                    .navigationDestination(for: String.self) { value in
-                        if value == "categorySelect" {
-                            CategorySelectView { sub in
-                                selectedSubcategory = sub
-                                path.removeAll() // 선택되면 이전 화면(AuctionView)으로 돌아가기
-                            }
-                        }
-                     
+                    .frame(maxWidth: .infinity)
+                    .padding(18)
+                    .background(Color(hex: "F2F2F2"))
+                    .cornerRadius(5)
+                    
+                }
+                if let selected = selectedCategory {
+                    PriceAndProfileView(category: selected.main)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
+            .padding(.horizontal, 35)
+            .navigationDestination(for: String.self) { value in
+                if value == "categorySelect" {
+                    CategorySelectView { main, sub in
+                        selectedCategory = CategorySelection(main: main, sub: sub)
+                        path.removeAll()
                     }
                 }
+            }
+        }
     }
 }
 

@@ -23,14 +23,44 @@ func loadWorkItems(from fileName: String) -> [String: [WorkItem]] {
         print("❌ File not found: \(fileName).json")
         return [:]
     }
+
     do {
         let data = try Data(contentsOf: url)
-        let decoder = JSONDecoder()
-        let result = try decoder.decode([String: [WorkItem]].self, from: data)
+        let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
+        
+        var result: [String: [WorkItem]] = [:]
+        
+        for (section, value) in jsonObject {
+            // Case 1: value가 배열인 경우 (basic)
+            if let itemsArray = value as? [[String: Any]] {
+                let itemsData = try JSONSerialization.data(withJSONObject: itemsArray)
+                let decodedItems = try JSONDecoder().decode([WorkItem].self, from: itemsData)
+                result[section] = decodedItems
+            }
+            // Case 2: value가 딕셔너리인 경우 (bone, facility, final)
+            else if let sectionDict = value as? [String: Any] {
+                // 바로 "항목" 있는 경우
+                if let itemsArray = sectionDict["항목"] as? [[String: Any]] {
+                    let itemsData = try JSONSerialization.data(withJSONObject: itemsArray)
+                    let decodedItems = try JSONDecoder().decode([WorkItem].self, from: itemsData)
+                    result[section] = decodedItems
+                }
+                
+                // 한 단계 더 깊이 들어가 "항목" 있는 경우
+                for (subKey, subValue) in sectionDict {
+                    if let subDict = subValue as? [String: Any],
+                       let itemsArray = subDict["항목"] as? [[String: Any]] {
+                        let itemsData = try JSONSerialization.data(withJSONObject: itemsArray)
+                        let decodedItems = try JSONDecoder().decode([WorkItem].self, from: itemsData)
+                        result["\(section) - \(subKey)"] = decodedItems
+                    }
+                }
+            }
+        }
+        
         return result
     } catch {
-        print("❌ JSON decode error: \(error)")
+        print("❌ JSON parse error in \(fileName): \(error)")
         return [:]
     }
 }
-
