@@ -259,175 +259,109 @@ class ConstructionEstimator: ObservableObject {
             urlRequest.addValue("application/json", forHTTPHeaderField: "Accept")
             urlRequest.timeoutInterval = 30.0
             
-            // 요청 데이터 로깅
             let requestData = try JSONSerialization.data(withJSONObject: requestDict)
-            print("📤 Firebase Functions 요청 데이터: \(String(data: requestData, encoding: .utf8) ?? "인코딩 실패")")
-            print("🌐 Firebase Functions 엔드포인트: \(url)")
-            print("🔍 요청 헤더: \(urlRequest.allHTTPHeaderFields ?? [:])")
             
             urlRequest.httpBody = requestData
             
             let (data, response) = try await URLSession.shared.data(for: urlRequest)
             
-            print("📥 Firebase Functions 응답 상태: \(response)")
-            
-            if let httpResponse = response as? HTTPURLResponse {
-                print("📊 HTTP 상태 코드: \(httpResponse.statusCode)")
-                
-                // 응답 데이터 로깅
-                if let responseString = String(data: data, encoding: .utf8) {
-                    print("📥 응답 데이터: \(responseString)")
-                }
-                
-                if httpResponse.statusCode == 200 {
-                    do {
-                        // 먼저 새로운 Firebase Functions 응답 구조로 파싱 시도
-                        let firebaseResponse = try JSONDecoder().decode(FirebaseEstimationResponse.self, from: data)
-                        
-                        // Firebase 응답을 기존 구조로 변환
-                        let estimation = EstimationResponse(
-                            predictions: Predictions(
-                                total_cost_krw: Int(firebaseResponse.cost_prediction),
-                                total_duration_days: Int(firebaseResponse.duration_prediction),
-                                cost_confidence_interval: ConfidenceInterval(
-                                    lower: Int(firebaseResponse.cost_confidence.lower),
-                                    upper: Int(firebaseResponse.cost_confidence.upper)
-                                ),
-                                duration_confidence_interval: ConfidenceInterval(
-                                    lower: Int(firebaseResponse.duration_confidence.lower),
-                                    upper: Int(firebaseResponse.duration_confidence.upper)
-                                )
-                            ),
-                            input_features: InputFeatures(
-                                area: firebaseResponse.input_data.size,
-                                floors: firebaseResponse.input_data.floor_count,
-                                construction_type: firebaseResponse.input_data.construction_type,
-                                location: "Firebase ML",
-                                complexity: "ML 예측",
-                                material_grade: firebaseResponse.input_data.material_grade,
-                                access_condition: firebaseResponse.input_data.access_condition,
-                                noise_restriction: firebaseResponse.input_data.noise_restriction,
-                                pump_truck_restriction: firebaseResponse.input_data.pump_truck_restriction,
-                                urban_area: firebaseResponse.input_data.urban_area,
-                                winter_construction: firebaseResponse.input_data.winter_construction
-                            ),
-                            model_info: ModelInfo(
-                                model_name: "Firebase ML 모델",
-                                version: "1.0.0",
-                                accuracy: 85.0,
-                                training_date: firebaseResponse.prediction_timestamp
-                            )
-                        )
-                        
-                        await MainActor.run {
-                            self.estimation = estimation
-                            self.isLoading = false
-                        }
-                        
-                        print("✅ Firebase Functions 견적 성공 (새로운 구조)")
-                        
-                    } catch let parsingError {
-                        print("⚠️ Firebase Functions 응답 파싱 실패: \(parsingError)")
-                        print("🔄 로컬 견적으로 자동 전환")
-                        
-                        // Firebase Functions 파싱 실패 시 로컬 견적으로 자동 전환
-                        let localEstimation = estimateLocal(request)
-                        
-                        await MainActor.run {
-                            // 로컬 견적을 새로운 구조로 변환
-                            self.estimation = EstimationResponse(
-                                predictions: Predictions(
-                                    total_cost_krw: localEstimation.costKRW,
-                                    total_duration_days: Int(localEstimation.durationDays),
-                                    cost_confidence_interval: ConfidenceInterval(
-                                        lower: Int(Double(localEstimation.costKRW) * 0.85),
-                                        upper: Int(Double(localEstimation.costKRW) * 1.15)
-                                    ),
-                                    duration_confidence_interval: ConfidenceInterval(
-                                        lower: Int(localEstimation.durationDays * 0.8),
-                                        upper: Int(localEstimation.durationDays * 1.2)
-                                    )
-                                ),
-                                input_features: InputFeatures(
-                                    area: request.size,
-                                    floors: request.floor_count,
-                                    construction_type: request.construction_type,
-                                    location: "로컬",
-                                    complexity: "보통",
-                                    material_grade: request.material_grade,
-                                    access_condition: request.accessCondition,
-                                    noise_restriction: request.noiseRestriction,
-                                    pump_truck_restriction: request.pumpTruckRestriction,
-                                    urban_area: request.urbanArea,
-                                    winter_construction: request.winterConstruction
-                                ),
-                                model_info: ModelInfo(
-                                    model_name: "로컬 계산기",
-                                    version: "1.0.0",
-                                    accuracy: 75.0,
-                                    training_date: "N/A"
-                                )
-                            )
-                            self.errorMessage = "Firebase Functions 연결에 실패하여 로컬 견적으로 계산했습니다. (응답 형식 오류)"
-                            self.isLoading = false
-                        }
-                    }
-                } else {
-                    let errorMessage = "Firebase Functions 오류: HTTP \(httpResponse.statusCode)"
-                    print("❌ \(errorMessage)")
-                    
-                    // HTTP 오류 시 로컬 견적으로 전환
-                    let localEstimation = estimateLocal(request)
-                    
-                    await MainActor.run {
-                        // 로컬 견적을 새로운 구조로 변환
-                        self.estimation = EstimationResponse(
-                            predictions: Predictions(
-                                total_cost_krw: localEstimation.costKRW,
-                                total_duration_days: Int(localEstimation.durationDays),
-                                cost_confidence_interval: ConfidenceInterval(
-                                    lower: Int(Double(localEstimation.costKRW) * 0.85),
-                                    upper: Int(Double(localEstimation.costKRW) * 1.15)
-                                ),
-                                duration_confidence_interval: ConfidenceInterval(
-                                    lower: Int(localEstimation.durationDays * 0.8),
-                                    upper: Int(localEstimation.durationDays * 1.2)
-                                )
-                            ),
-                            input_features: InputFeatures(
-                                area: request.size,
-                                floors: request.floor_count,
-                                construction_type: request.construction_type,
-                                location: "로컬",
-                                complexity: "보통",
-                                material_grade: request.material_grade,
-                                access_condition: request.accessCondition,
-                                noise_restriction: request.noiseRestriction,
-                                pump_truck_restriction: request.pumpTruckRestriction,
-                                urban_area: request.urbanArea,
-                                winter_construction: request.winterConstruction
-                            ),
-                            model_info: ModelInfo(
-                                model_name: "로컬 계산기",
-                                version: "1.0.0",
-                                accuracy: 75.0,
-                                training_date: "N/A"
-                            )
-                        )
-                        if httpResponse.statusCode == 404 {
-                            self.errorMessage = "Firebase Functions를 찾을 수 없습니다. 로컬 견적으로 계산했습니다."
-                        } else {
-                            self.errorMessage = "Firebase Functions 오류로 로컬 견적으로 계산했습니다. (HTTP \(httpResponse.statusCode))"
-                        }
-                        self.isLoading = false
-                    }
-                }
-            } else {
+            guard let httpResponse = response as? HTTPURLResponse else {
                 throw URLError(.badServerResponse)
             }
-        } catch {
-            print("❌ Firebase Functions 호출 오류: \(error)")
             
+            guard httpResponse.statusCode == 200 else {
+                let errorMessage = "Firebase Functions 오류: HTTP \(httpResponse.statusCode)"
+                throw URLError(.badServerResponse)
+            }
+            
+            do {
+                // 먼저 새로운 Firebase Functions 응답 구조로 파싱 시도
+                let firebaseResponse = try JSONDecoder().decode(FirebaseEstimationResponse.self, from: data)
+                
+                // Firebase 응답을 기존 구조로 변환
+                let estimation = EstimationResponse(
+                    predictions: Predictions(
+                        total_cost_krw: Int(firebaseResponse.cost_prediction),
+                        total_duration_days: Int(firebaseResponse.duration_prediction),
+                        cost_confidence_interval: ConfidenceInterval(
+                            lower: Int(firebaseResponse.cost_confidence.lower),
+                            upper: Int(firebaseResponse.cost_confidence.upper)
+                        ),
+                        duration_confidence_interval: ConfidenceInterval(
+                            lower: Int(firebaseResponse.duration_confidence.lower),
+                            upper: Int(firebaseResponse.duration_confidence.upper)
+                        )
+                    ),
+                    input_features: InputFeatures(
+                        area: firebaseResponse.input_data.size,
+                        floors: firebaseResponse.input_data.floor_count,
+                        construction_type: firebaseResponse.input_data.construction_type,
+                        location: "Firebase ML",
+                        complexity: "ML 예측",
+                        material_grade: firebaseResponse.input_data.material_grade,
+                        access_condition: firebaseResponse.input_data.access_condition,
+                        noise_restriction: firebaseResponse.input_data.noise_restriction,
+                        pump_truck_restriction: firebaseResponse.input_data.pump_truck_restriction,
+                        urban_area: firebaseResponse.input_data.urban_area,
+                        winter_construction: firebaseResponse.input_data.winter_construction
+                    ),
+                    model_info: ModelInfo(
+                        model_name: "Firebase ML 모델",
+                        version: "1.0.0",
+                        accuracy: 85.0,
+                        training_date: firebaseResponse.prediction_timestamp
+                    )
+                )
+                
+                await MainActor.run {
+                    self.estimation = estimation
+                    self.isLoading = false
+                }
+                
+            } catch let parsingError {
+                // Firebase Functions 파싱 실패 시 로컬 견적으로 자동 전환
+                let localEstimation = estimateLocal(request)
+                
+                await MainActor.run {
+                    // 로컬 견적을 새로운 구조로 변환
+                    self.estimation = EstimationResponse(
+                        predictions: Predictions(
+                            total_cost_krw: localEstimation.costKRW,
+                            total_duration_days: Int(localEstimation.durationDays),
+                            cost_confidence_interval: ConfidenceInterval(
+                                lower: Int(Double(localEstimation.costKRW) * 0.85),
+                                upper: Int(Double(localEstimation.costKRW) * 1.15)
+                            ),
+                            duration_confidence_interval: ConfidenceInterval(
+                                lower: Int(localEstimation.durationDays * 0.8),
+                                upper: Int(localEstimation.durationDays * 1.2)
+                            )
+                        ),
+                        input_features: InputFeatures(
+                            area: request.size,
+                            floors: request.floor_count,
+                            construction_type: request.construction_type,
+                            location: "로컬",
+                            complexity: "보통",
+                            material_grade: request.material_grade,
+                            access_condition: request.accessCondition,
+                            noise_restriction: request.noiseRestriction,
+                            pump_truck_restriction: request.pumpTruckRestriction,
+                            urban_area: request.urbanArea,
+                            winter_construction: request.winterConstruction
+                        ),
+                        model_info: ModelInfo(
+                            model_name: "로컬 계산기",
+                            version: "1.0.0",
+                            accuracy: 75.0,
+                            training_date: "N/A"
+                        )
+                    )
+                    self.errorMessage = "Firebase Functions 연결에 실패하여 로컬 견적으로 계산했습니다. (응답 형식 오류)"
+                    self.isLoading = false
+                }
+            }
+        } catch {
             // 네트워크 오류 등으로 Firebase Functions 호출 자체가 실패한 경우 로컬 견적으로 전환
             let localEstimation = estimateLocal(request)
             

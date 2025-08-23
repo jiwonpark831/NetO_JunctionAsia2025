@@ -19,7 +19,7 @@ struct EstimationView: View {
     @State private var urbanArea = true
     @State private var winterConstruction = false
     
-    private let constructOptions = ["RC", "목구조", "철골"]
+    private let constructOptions = ["철근콘크리트", "철골철근콘크리트", "철골조", "순철골", "목재구조", "벽돌구조", "경량철골"]
     private let materialOptions = ["기본", "중급", "고급", "프리미엄"]
     private let soilConditionOptions = ["보통", "연약", "양호"]
     private let conditionOptions = ["도심", "펌프카제한", "소음규제", "지반연약", "장비양호"]
@@ -297,50 +297,53 @@ struct EstimationView: View {
         
         // ML 모델 호출 시도
         Task {
-            await estimator.estimate(request)
-            
-            // ML 모델 실패 시 로컬 견적으로 폴백
-            if estimator.errorMessage != nil {
-                print("🔄 ML 모델 실패, 로컬 견적으로 폴백")
-                let localEstimation = estimator.estimateLocal(request)
-                await MainActor.run {
-                    // 로컬 견적을 새로운 구조로 변환
-                    estimator.estimation = EstimationResponse(
-                        predictions: Predictions(
-                            total_cost_krw: localEstimation.costKRW,
-                            total_duration_days: Int(localEstimation.durationDays),
-                            cost_confidence_interval: ConfidenceInterval(
-                                lower: Int(Double(localEstimation.costKRW) * 0.85),
-                                upper: Int(Double(localEstimation.costKRW) * 1.15)
-                            ),
-                            duration_confidence_interval: ConfidenceInterval(
-                                lower: Int(localEstimation.durationDays * 0.8),
-                                upper: Int(localEstimation.durationDays * 1.2)
-                            )
-                        ),
-                        input_features: InputFeatures(
-                            area: Int(size),
-                            floors: Int(floor_count),
-                            construction_type: selectedConstructionType,
-                            location: "로컬",
-                            complexity: "보통",
-                            material_grade: selectedMaterialGrade,
-                            access_condition: selectedAccessCondition,
-                            noise_restriction: noiseRestriction,
-                            pump_truck_restriction: pumpTruckRestriction,
-                            urban_area: urbanArea,
-                            winter_construction: winterConstruction
-                        ),
-                        model_info: ModelInfo(
-                            model_name: "로컬 계산기",
-                            version: "1.0.0",
-                            accuracy: 75.0,
-                            training_date: "N/A"
-                        )
-                    )
-                    estimator.errorMessage = "ML 모델 연결 실패로 로컬 견적을 사용합니다."
-                }
+            do {
+                try await estimator.estimate(request)
+            } catch {
+                // ML 모델 실패 시 로컬 견적으로 폴백
+                await performLocalEstimation(request)
             }
+        }
+    }
+    
+    private func performLocalEstimation(_ request: EstimationRequest) async {
+        let localEstimation = estimator.estimateLocal(request)
+        await MainActor.run {
+            // 로컬 견적을 새로운 구조로 변환
+            estimator.estimation = EstimationResponse(
+                predictions: Predictions(
+                    total_cost_krw: localEstimation.costKRW,
+                    total_duration_days: Int(localEstimation.durationDays),
+                    cost_confidence_interval: ConfidenceInterval(
+                        lower: Int(Double(localEstimation.costKRW) * 0.85),
+                        upper: Int(Double(localEstimation.costKRW) * 1.15)
+                    ),
+                    duration_confidence_interval: ConfidenceInterval(
+                        lower: Int(localEstimation.durationDays * 0.8),
+                        upper: Int(localEstimation.durationDays * 1.2)
+                    )
+                ),
+                input_features: InputFeatures(
+                    area: Int(size),
+                    floors: Int(floor_count),
+                    construction_type: selectedConstructionType,
+                    location: "로컬",
+                    complexity: "보통",
+                    material_grade: selectedMaterialGrade,
+                    access_condition: selectedAccessCondition,
+                    noise_restriction: noiseRestriction,
+                    pump_truck_restriction: pumpTruckRestriction,
+                    urban_area: urbanArea,
+                    winter_construction: winterConstruction
+                ),
+                model_info: ModelInfo(
+                    model_name: "로컬 계산기",
+                    version: "1.0.0",
+                    accuracy: 75.0,
+                    training_date: "N/A"
+                )
+            )
+            estimator.errorMessage = "ML 모델 연결 실패로 로컬 견적을 사용합니다."
         }
     }
 }
