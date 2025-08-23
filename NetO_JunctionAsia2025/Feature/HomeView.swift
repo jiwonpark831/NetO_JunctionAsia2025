@@ -8,15 +8,14 @@
 import SwiftUI
 
 struct HomeView: View {
-    @StateObject private var manager = GoogleSignInManager()
+    @StateObject private var manager = GoogleSignInManager.shared
 
     var body: some View {
         Text("HomeView")
-        Text("\(manager.username ?? "")")
+        Text("\(manager.userData.username)")
     }
 }
 
 #Preview {
     HomeView()
 }
-

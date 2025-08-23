@@ -14,25 +14,18 @@ import SwiftUI
 struct UserData {
     var userId: String = ""
     var idToken: String = ""
+    var username: String = ""
+    var email: String = ""
 }
 
 class GoogleSignInManager: ObservableObject {
-    @Published var userData = UserData()
-    @Published var username: String?
-    @Published var isLogin = false
+    static let shared = GoogleSignInManager()
 
-    func checkUserInfo() {
-        if GIDSignIn.sharedInstance.currentUser != nil {
-            let user = GIDSignIn.sharedInstance.currentUser
-            guard let user = user else {
-                return
-            }
-            self.username = user.profile?.givenName ?? ""
-            userData.userId = user.userID ?? ""
-            userData.idToken = user.idToken?.tokenString ?? ""
-            isLogin = true
-        }
-    }
+    @Published var userData = UserData()
+    @Published var isLogin = false
+    @Published var showOnboarding: Bool = true
+
+    private init() {}
 
     func signIn() {
         guard
@@ -45,12 +38,49 @@ class GoogleSignInManager: ObservableObject {
 
         GIDSignIn.sharedInstance.signIn(
             withPresenting: presentingViewController
-        ) { _, error in
+        ) { result, error in
+
             if let error = error {
-                print("error: \(error.localizedDescription)")
+                print("Google 로그인 실패: \(error.localizedDescription)")
+                return
             }
 
-            self.checkUserInfo()
+            guard let user = result?.user,
+                let idToken = user.idToken?.tokenString
+            else {
+                print("Error: Google 사용자 정보 또는 ID Token을 가져올 수 없습니다.")
+                return
+            }
+
+            let credential = GoogleAuthProvider.credential(
+                withIDToken: idToken,
+                accessToken: user.accessToken.tokenString
+            )
+
+            Auth.auth().signIn(with: credential) { authResult, error in
+
+                if let error = error {
+                    print("Firebase 로그인 실패: \(error.localizedDescription)")
+                    return
+                }
+
+                guard let firebaseUser = authResult?.user else {
+                    print("Error: Firebase 사용자 정보를 가져올 수 없습니다.")
+                    return
+                }
+
+                print("Firebase 로그인 성공! UID: \(firebaseUser.uid)")
+
+                DispatchQueue.main.async {
+                    self.userData.userId = firebaseUser.uid
+                    self.userData.idToken = idToken
+                    self.userData.email = firebaseUser.email ?? ""
+                    self.userData.username = firebaseUser.displayName ?? ""
+
+                    self.isLogin = true
+
+                }
+            }
         }
     }
 }
