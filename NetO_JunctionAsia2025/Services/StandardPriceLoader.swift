@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 class StandardPriceLoader: ObservableObject {
     @Published var constructionData: ConstructionCategory?
