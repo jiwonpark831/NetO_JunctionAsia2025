@@ -14,34 +14,46 @@ struct AuctionView: View {
     
     var body: some View {
         NavigationStack(path: $path) {
-            VStack {
-                NavigationLink(value: "categorySelect") {
-                    HStack {
-                        Image(systemName: "line.3.horizontal.decrease")
-                            .foregroundColor(Color(hex: "626262"))
+            ScrollView {
+                VStack {
+                    NavigationLink(value: "categorySelect") {
+                        HStack {
+                            Image(systemName: "line.3.horizontal.decrease")
+                                .foregroundColor(Color(hex: "626262"))
+                            
+                            Spacer()
+                            Text(selectedCategory?.sub ?? "What service do you need?")
+                                .foregroundColor(Color(hex: "626262"))
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(18)
+                        .background(Color(hex: "F2F2F2"))
+                        .cornerRadius(5)
                         
-                        Spacer()
-                        Text(selectedCategory?.sub ?? "What service do you need?")
-                            .foregroundColor(Color(hex: "626262"))
-                        Spacer()
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(18)
-                    .background(Color(hex: "F2F2F2"))
-                    .cornerRadius(5)
+                    .padding(.top, 38)
                     
+                    Spacer()
+                    
+                    if let selected = selectedCategory {
+                        PriceAndProfileView(category: selected.main)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                    
+                    Divider()
+                        .padding(.horizontal)
+                    
+                    // AI 입찰 섹션
+                    AIBiddingSection()
                 }
-                if let selected = selectedCategory {
-                    PriceAndProfileView(category: selected.main)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-            }
-            .padding(.horizontal, 35)
-            .navigationDestination(for: String.self) { value in
-                if value == "categorySelect" {
-                    CategorySelectView { main, sub in
-                        selectedCategory = CategorySelection(main: main, sub: sub)
-                        path.removeAll()
+                .padding(.horizontal, 35)
+                .navigationDestination(for: String.self) { value in
+                    if value == "categorySelect" {
+                        CategorySelectView { main, sub in
+                            selectedCategory = CategorySelection(main: main, sub: sub)
+                            path.removeAll()
+                        }
                     }
                 }
             }
