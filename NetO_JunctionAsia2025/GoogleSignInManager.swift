@@ -23,9 +23,11 @@ class GoogleSignInManager: ObservableObject {
 
     @Published var userData = UserData()
     @Published var isLogin = false
-    @Published var showOnboarding: Bool = true
+    @Published var showOnboarding: Bool = false
 
-    private init() {}
+    private init() {
+        checkLoginStatus()
+    }
 
     func signIn() {
         guard
@@ -78,9 +80,24 @@ class GoogleSignInManager: ObservableObject {
                     self.userData.username = firebaseUser.displayName ?? ""
 
                     self.isLogin = true
-
+                    self.showOnboarding = false
                 }
             }
+        }
+    }
+    
+    private func checkLoginStatus() {
+        if let currentUser = Auth.auth().currentUser {
+            // 이미 로그인된 사용자가 있음
+            self.userData.userId = currentUser.uid
+            self.userData.email = currentUser.email ?? ""
+            self.userData.username = currentUser.displayName ?? ""
+            self.isLogin = true
+            self.showOnboarding = false
+        } else {
+            // 로그인된 사용자가 없음
+            self.isLogin = false
+            self.showOnboarding = false
         }
     }
 }

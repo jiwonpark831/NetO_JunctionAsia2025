@@ -111,7 +111,7 @@ struct HomeView: View {
                             )
 
                     case .schedule:
-                        ScheduleView()
+                        EstimationView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
