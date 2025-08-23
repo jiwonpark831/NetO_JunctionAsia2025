@@ -75,22 +75,22 @@ enum MakeHouseStep: Int, CaseIterable {
         return MakeHouseStep.allCases.count
     }
     
-    var title: String {
-        switch self {
-        case .size: "집의 크기는 몇 평으로 할까요?"
-        case .floor_count: "몇 층으로 지을까요?"
-        case .room_count: "방은 몇 개가 필요한가요?"
-        case .bathroom_count: "화장실은 몇 개가 필요한가요?"
-        case .construction_type: "어떤 건축 공법을 원하시나요?"
-        case .material_grade: "자재 등급을 선택해주세요."
-        case .soil_condition: "대지의 지반 상태는 어떤가요?"
-        case .access_condition: "공사 차량의 진입 여건은 어떤가요?"
-        case .noise_restriction: "소음 제한이 있는 지역인가요?"
-        case .pump_truck_restriction: "펌프카 사용에 제한이 있나요?"
-        case .urban_area: "도심지에 해당하나요?"
-        case .winter_construction: "동절기 공사가 필요한가요?"
+            var title: String {
+            switch self {
+            case .size: "What size house would you like to build?"
+            case .floor_count: "How many floors would you like?"
+            case .room_count: "How many rooms do you need?"
+            case .bathroom_count: "How many bathrooms do you need?"
+            case .construction_type: "What construction method would you prefer?"
+            case .material_grade: "Please select the material grade."
+            case .soil_condition: "What is the soil condition of the site?"
+            case .access_condition: "What is the access condition for construction vehicles?"
+            case .noise_restriction: "Is this area subject to noise restrictions?"
+            case .pump_truck_restriction: "Are there restrictions on pump truck usage?"
+            case .urban_area: "Is this an urban area?"
+            case .winter_construction: "Is winter construction required?"
+            }
         }
-    }
 }
 
 // MARK: - MakeHouseStepData
@@ -117,10 +117,10 @@ class MakeHouseStepData: ObservableObject, Codable {
     @Published var winter_construction: Bool? = nil
     
     // 9번부터 12번까지의 문자열 속성들 (UI용)
-    @Published var noise_restriction_string: String = "모름"
-    @Published var pump_truck_restriction_string: String = "모름"
-    @Published var urban_area_string: String = "모름"
-    @Published var winter_construction_string: String = "모름"
+    @Published var noise_restriction_string: String = "Unknown"
+    @Published var pump_truck_restriction_string: String = "Unknown"
+    @Published var urban_area_string: String = "Unknown"
+    @Published var winter_construction_string: String = "Unknown"
 
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -163,10 +163,10 @@ class MakeHouseStepData: ObservableObject, Codable {
             Bool.self,
             forKey: .winter_construction
         )
-        noise_restriction_string = try container.decodeIfPresent(String.self, forKey: .noise_restriction_string) ?? "모름"
-        pump_truck_restriction_string = try container.decodeIfPresent(String.self, forKey: .pump_truck_restriction_string) ?? "모름"
-        urban_area_string = try container.decodeIfPresent(String.self, forKey: .urban_area_string) ?? "모름"
-        winter_construction_string = try container.decodeIfPresent(String.self, forKey: .winter_construction_string) ?? "모름"
+        noise_restriction_string = try container.decodeIfPresent(String.self, forKey: .noise_restriction_string) ?? "Unknown"
+        pump_truck_restriction_string = try container.decodeIfPresent(String.self, forKey: .pump_truck_restriction_string) ?? "Unknown"
+        urban_area_string = try container.decodeIfPresent(String.self, forKey: .urban_area_string) ?? "Unknown"
+        winter_construction_string = try container.decodeIfPresent(String.self, forKey: .winter_construction_string) ?? "Unknown"
     }
 
     func encode(to encoder: Encoder) throws {
@@ -198,25 +198,25 @@ class MakeHouseStepData: ObservableObject, Codable {
         try container.encode(winter_construction_string, forKey: .winter_construction_string)
     }
     init() {
-        noise_restriction_string = "모름"
-        pump_truck_restriction_string = "모름"
-        urban_area_string = "모름"
-        winter_construction_string = "모름"
+        noise_restriction_string = "Unknown"
+        pump_truck_restriction_string = "Unknown"
+        urban_area_string = "Unknown"
+        winter_construction_string = "Unknown"
     }
     
     // Bool 값이 변경될 때 문자열 값도 동기화
     func syncStringValues() {
         if let noise = noise_restriction {
-            noise_restriction_string = noise ? "예" : "아니오"
+            noise_restriction_string = noise ? "Yes" : "No"
         }
         if let pump = pump_truck_restriction {
-            pump_truck_restriction_string = pump ? "예" : "아니오"
+            pump_truck_restriction_string = pump ? "Yes" : "No"
         }
         if let urban = urban_area {
-            urban_area_string = urban ? "예" : "아니오"
+            urban_area_string = urban ? "Yes" : "No"
         }
         if let winter = winter_construction {
-            winter_construction_string = winter ? "예" : "아니오"
+            winter_construction_string = winter ? "Yes" : "No"
         }
     }
 }
@@ -238,7 +238,7 @@ struct MakeHouseView: View {
                     Button(action: goToPreviousStep) {
                         HStack(spacing: 5) {
                             Image(systemName: "chevron.left")
-                            Text("이전")
+                            Text("Previous")
                         }
                         .foregroundColor(.jaorange)
                     }
@@ -287,25 +287,25 @@ struct MakeHouseView: View {
                 NumberInputView(
                     title: step.title,
                     value: $stepData.size,
-                    unit: "평"
+                    unit: "pyeong"
                 )
             case .floor_count:
                 NumberInputView(
                     title: step.title,
                     value: $stepData.floor_count,
-                    unit: "층"
+                    unit: "floors"
                 )
             case .room_count:
                 NumberInputView(
                     title: step.title,
                     value: $stepData.room_count,
-                    unit: "개"
+                    unit: "rooms"
                 )
             case .bathroom_count:
                 NumberInputView(
                     title: step.title,
                     value: $stepData.bathroom_count,
-                    unit: "개"
+                    unit: "bathrooms"
                 )
             case .construction_type:
                 CapsulePickerInputView(
@@ -317,55 +317,55 @@ struct MakeHouseView: View {
                 CapsulePickerInputView(
                     title: step.title,
                     selection: $stepData.material_grade,
-                    options: ["기본", "중급", "고급", "프리미엄"]
+                    options: ["Basic", "Intermediate", "Premium", "Luxury"]
                 )
             case .soil_condition:
                 CapsulePickerInputView(
                     title: step.title,
                     selection: $stepData.soil_condition,
-                    options: ["보통", "연약", "양호"]
+                    options: ["Normal", "Weak", "Good"]
                 )
             case .access_condition:
                 CapsulePickerInputView(
                     title: step.title,
                     selection: $stepData.access_condition,
-                    options: ["양호", "보통", "제한적", "매우제한적"]
+                    options: ["Good", "Normal", "Limited", "Very Limited"]
                 )
             case .noise_restriction:
                 CapsulePickerInputView(
                     title: step.title,
                     selection: $stepData.noise_restriction_string,
-                    options: ["예", "아니오", "모름"]
+                    options: ["Yes", "No", "Unknown"]
                 )
                 .onChange(of: stepData.noise_restriction_string) { newValue in
-                    stepData.noise_restriction = newValue == "예" ? true : (newValue == "아니오" ? false : nil)
+                    stepData.noise_restriction = newValue == "Yes" ? true : (newValue == "No" ? false : nil)
                 }
             case .pump_truck_restriction:
                 CapsulePickerInputView(
                     title: step.title,
                     selection: $stepData.pump_truck_restriction_string,
-                    options: ["예", "아니오", "모름"]
+                    options: ["Yes", "No", "Unknown"]
                 )
                 .onChange(of: stepData.pump_truck_restriction_string) { newValue in
-                    stepData.pump_truck_restriction = newValue == "예" ? true : (newValue == "아니오" ? false : nil)
+                    stepData.pump_truck_restriction = newValue == "Yes" ? true : (newValue == "No" ? false : nil)
                 }
             case .urban_area:
                 CapsulePickerInputView(
                     title: step.title,
                     selection: $stepData.urban_area_string,
-                    options: ["예", "아니오", "모름"]
+                    options: ["Yes", "No", "Unknown"]
                 )
                 .onChange(of: stepData.urban_area_string) { newValue in
-                    stepData.urban_area = newValue == "예" ? true : (newValue == "아니오" ? false : nil)
+                    stepData.urban_area = newValue == "Yes" ? true : (newValue == "No" ? false : nil)
                 }
             case .winter_construction:
                 CapsulePickerInputView(
                     title: step.title,
                     selection: $stepData.winter_construction_string,
-                    options: ["예", "아니오", "모름"]
+                    options: ["Yes", "No", "Unknown"]
                 )
                 .onChange(of: stepData.winter_construction_string) { newValue in
-                    stepData.winter_construction = newValue == "예" ? true : (newValue == "아니오" ? false : nil)
+                    stepData.winter_construction = newValue == "Yes" ? true : (newValue == "No" ? false : nil)
                 }
             }
         }
@@ -379,7 +379,7 @@ struct MakeHouseView: View {
         HStack {
             if currentStep.rawValue < currentStep.totalSteps - 1 {
                 Button(action: goToNextStep) {
-                    Text("다음")
+                    Text("Next")
                         .padding()
                         .frame(maxWidth: 128, maxHeight: 49)
                         .background(.jaorange)
@@ -396,7 +396,7 @@ struct MakeHouseView: View {
                                 .environmentObject(estimator),
                             isActive: $navigateToSummary
                         ) {
-                            Text("결과 보기")
+                            Text("View Results")
                                 .padding()
                                 .frame(maxWidth: 128, maxHeight: 49)
                                 .background(.jaorange)
@@ -414,7 +414,7 @@ struct MakeHouseView: View {
                                     Image(systemName: "function")
                                         .font(.system(size: 16, weight: .medium))
                                 }
-                                Text(estimator.isLoading ? "계산 중..." : "결과 보러가기")
+                                Text(estimator.isLoading ? "Calculating..." : "View Results")
                             }
                             .foregroundColor(.white)
                             .frame(maxWidth: 128, maxHeight: 49)
@@ -466,11 +466,11 @@ struct MakeHouseView: View {
         
         // 조건 태그 생성
         var conditionTags: [String] = []
-        if stepData.urban_area == true { conditionTags.append("도심") }
-        if stepData.pump_truck_restriction == true { conditionTags.append("펌프카제한") }
-        if stepData.noise_restriction == true { conditionTags.append("소음규제") }
-        if stepData.soil_condition == "연약" { conditionTags.append("지반연약") }
-        if stepData.access_condition == "양호" { conditionTags.append("장비양호") }
+        if stepData.urban_area == true { conditionTags.append("Urban") }
+        if stepData.pump_truck_restriction == true { conditionTags.append("PumpTruckRestriction") }
+        if stepData.noise_restriction == true { conditionTags.append("NoiseRestriction") }
+        if stepData.soil_condition == "연약" { conditionTags.append("WeakSoil") }
+        if stepData.access_condition == "양호" { conditionTags.append("GoodAccess") }
         
         let request = EstimationRequest(
             startDate: startDateString,
@@ -528,8 +528,8 @@ struct MakeHouseView: View {
                     area: stepData.size,
                     floors: stepData.floor_count,
                     construction_type: stepData.construction_type,
-                    location: "로컬",
-                    complexity: "보통",
+                                location: "Local",
+            complexity: "Normal",
                     material_grade: stepData.material_grade,
                     access_condition: stepData.access_condition,
                     noise_restriction: stepData.noise_restriction,
@@ -538,7 +538,7 @@ struct MakeHouseView: View {
                     winter_construction: stepData.winter_construction
                 ),
                 model_info: ModelInfo(
-                    model_name: "로컬 계산기",
+                    model_name: "Local Calculator",
                     version: "1.0.0",
                     accuracy: 75.0,
                     training_date: "N/A"
@@ -567,7 +567,7 @@ struct NumberInputView: View {
                 .multilineTextAlignment(.center)
 
             HStack {
-                TextField("숫자 입력", text: $textValue)
+                TextField("Enter number", text: $textValue)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.center)
@@ -606,7 +606,7 @@ struct StringInputView: View {
                 .multilineTextAlignment(.center)
 
             HStack {
-                TextField("입력", text: $value)
+                TextField("Input", text: $value)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.center)
@@ -662,9 +662,9 @@ struct BooleanInputView: View {
 
         var title: String {
             switch self {
-            case .yes: return "예"
-            case .no: return "아니오"
-            case .unknown: return "모름"
+            case .yes: return "Yes"
+            case .no: return "No"
+            case .unknown: return "Unknown"
             }
         }
 
@@ -722,39 +722,39 @@ struct SummaryView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 15) {
-                Text("입력하신 정보는 다음과 같습니다.")
+                Text("The information you entered is as follows:")
                     .font(.title2).bold()
                     .padding(.bottom, 10)
 
                 Group {
-                    SummaryRow(label: "크기", value: "\(stepData.size) 평")
-                    SummaryRow(label: "층수", value: "\(stepData.floor_count) 층")
-                    SummaryRow(label: "방 개수", value: "\(stepData.room_count) 개")
+                    SummaryRow(label: "Size", value: "\(stepData.size) pyeong")
+                    SummaryRow(label: "Floors", value: "\(stepData.floor_count) floors")
+                    SummaryRow(label: "Rooms", value: "\(stepData.room_count) rooms")
                     SummaryRow(
-                        label: "화장실 개수",
-                        value: "\(stepData.bathroom_count) 개"
+                        label: "Bathrooms",
+                        value: "\(stepData.bathroom_count) bathrooms"
                     )
                     SummaryRow(
-                        label: "건축 공법",
+                        label: "Construction Method",
                         value: stepData.construction_type
                     )
-                    SummaryRow(label: "자재 등급", value: stepData.material_grade)
-                    SummaryRow(label: "지반 상태", value: stepData.soil_condition)
-                    SummaryRow(label: "진입 여건", value: stepData.access_condition)
+                    SummaryRow(label: "Material Grade", value: stepData.material_grade)
+                    SummaryRow(label: "Soil Condition", value: stepData.soil_condition)
+                    SummaryRow(label: "Access Condition", value: stepData.access_condition)
                     SummaryRow(
-                        label: "소음 제한",
+                        label: "Noise Restriction",
                         value: stepData.noise_restriction_string
                     )
                     SummaryRow(
-                        label: "펌프카 제한",
+                        label: "Pump Truck Restriction",
                         value: stepData.pump_truck_restriction_string
                     )
                     SummaryRow(
-                        label: "도심지",
+                        label: "Urban Area",
                         value: stepData.urban_area_string
                     )
                     SummaryRow(
-                        label: "동절기 공사",
+                        label: "Winter Construction",
                         value: stepData.winter_construction_string
                     )
                 }
@@ -764,43 +764,34 @@ struct SummaryView: View {
                 // 견적 결과 표시
                 if let estimation = estimator.estimation {
                     VStack(alignment: .leading, spacing: 15) {
-                        Text("견적 결과")
+                        Text("Estimation Results")
                             .font(.title2).bold()
                             .padding(.bottom, 10)
                         
                         VStack(spacing: 12) {
                             HStack {
-                                Text("예상 공사 비용")
+                                Text("Estimated Construction Cost")
                                     .font(.headline)
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                Text("\(estimation.predictions.total_cost_krw)원")
+                                Text("\(estimation.predictions.total_cost_krw) KRW")
                                     .font(.title2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.jaorange)
                             }
                             
                             HStack {
-                                Text("예상 공사 기간")
+                                Text("Estimated Construction Duration")
                                     .font(.headline)
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                Text("\(estimation.predictions.total_duration_days)일")
+                                Text("\(estimation.predictions.total_duration_days) days")
                                     .font(.title2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.jayellow)
                             }
                             
                             if let modelInfo = estimation.model_info {
-                                HStack {
-                                    Text("계산 방식")
-                                        .font(.headline)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text(modelInfo.model_name ?? "알 수 없음")
-                                        .font(.body)
-                                        .foregroundColor(.primary)
-                                }
                             }
                         }
                         .padding()
@@ -810,11 +801,11 @@ struct SummaryView: View {
                 } else {
                     // 견적이 계산되지 않은 경우 안내 메시지
                     VStack(alignment: .leading, spacing: 15) {
-                        Text("견적 계산이 필요합니다")
+                        Text("Estimation calculation is required")
                             .font(.title2).bold()
                             .padding(.bottom, 10)
                         
-                        Text("정확한 견적을 위해 '견적 계산' 버튼을 먼저 눌러주세요.")
+                        Text("Please click the 'Calculate Estimation' button first for an accurate estimate.")
                             .font(.body)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -837,7 +828,7 @@ struct SummaryView: View {
                     if isSaving {
                         ProgressView()
                     } else {
-                        Text("입찰하러가기")
+                        Text("Go to Bidding")
                     }
                 }
                 .disabled(isSaving)
@@ -849,34 +840,34 @@ struct SummaryView: View {
             }
             .padding()
         }
-        .navigationTitle("요약 및 저장")
+        .navigationTitle("Summary and Save")
         .alert(isPresented: $showAlert) {
             Alert(
-                title: Text("알림"),
+                title: Text("Notification"),
                 message: Text(alertMessage ?? ""),
-                dismissButton: .default(Text("확인"))
+                dismissButton: .default(Text("OK"))
             )
         }
     }
 
     private func boolToString(_ value: Bool?) -> String {
         if let value = value {
-            return value ? "예" : "아니오"
+            return value ? "Yes" : "No"
         }
-        return "모름"
+        return "Unknown"
     }
     
     private func stringToBool(_ value: String) -> Bool? {
         switch value {
-        case "예": return true
-        case "아니오": return false
+        case "Yes": return true
+        case "No": return false
         default: return nil
         }
     }
 
     private func saveToFirebase() {
         guard let userId = Auth.auth().currentUser?.uid else {
-            alertMessage = "데이터를 저장하려면 로그인이 필요합니다."
+            alertMessage = "Login is required to save data."
             showAlert = true
             return
         }
@@ -902,15 +893,15 @@ struct SummaryView: View {
             userDocRef.setData(saveData, merge: true) { error in
                 isSaving = false
                 if let error = error {
-                    alertMessage = "저장 실패: \(error.localizedDescription)"
+                    alertMessage = "Save failed: \(error.localizedDescription)"
                 } else {
-                    alertMessage = "성공적으로 저장되었습니다!"
+                    alertMessage = "Successfully saved!"
                 }
                 showAlert = true
             }
         } catch let error {
             isSaving = false
-            alertMessage = "데이터 저장 실패: \(error.localizedDescription)"
+            alertMessage = "Data save failed: \(error.localizedDescription)"
             showAlert = true
         }
     }
