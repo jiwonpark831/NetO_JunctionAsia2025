@@ -7,60 +7,80 @@
 
 import SwiftUI
 
+enum Tab {
+    case bid
+    case home
+    case schedule
+}
+
 struct HomeView: View {
     @StateObject private var manager = GoogleSignInManager.shared
-    @State private var showingEstimation = false
+    @State private var selectedTab: Tab = .home
 
     var body: some View {
-        NavigationView {
-            VStack(spacing: 30) {
-                // 사용자 정보 표시
-                VStack(spacing: 10) {
-                  
-                    
-                    Text("안녕하세요!")
-                        .font(.title2)
-                        .fontWeight(.medium)
-                    
-                    Text("\(manager.userData.username)님")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
-                }
-                .padding(.top, 40)
-                
-                // 메인 기능 버튼들
-                VStack(spacing: 20) {
-                    // 견적서 버튼
-                    NavigationLink(destination: EstimationView()) {
-                        HStack {
-                            Image(systemName: "doc.text.fill")
-                                .font(.title2)
-                            Text("견적서 작성")
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(15)
-                        .shadow(radius: 5)
-                    }
-                    
-                    // 다른 기능 버튼들
-                    HStack(spacing: 20) {
-
-                        
-
+        NavigationStack {
+            VStack(alignment: .leading) {
+                Image("logo")
+                HStack {
+                    Text("Welcome," + "\(manager.userData.username)")
+                    Button {
+                    } label: {
+                        Image(systemName: "bell.fill")
                     }
                 }
-                .padding(.horizontal, 20)
-                
-                Spacer()
+                HStack {
+                    Button(action: {
+                        selectedTab = .bid
+                    }) {
+                        Text("BID")
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .foregroundStyle(
+                                selectedTab == .bid ? .orange : .gray
+                            )
+                    }
+
+                    Button(action: {
+                        selectedTab = .home
+                    }) {
+                        Text("Home")
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .foregroundStyle(
+                                selectedTab == .home ? .orange : .gray
+                            )
+                    }
+
+                    Button(action: {
+                        selectedTab = .schedule
+                    }) {
+                        Text("SCHEDULE")
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .foregroundStyle(
+                                selectedTab == .schedule ? .orange : .gray
+                            )
+                    }
+                }
+                Divider()
+
+                VStack {
+                    switch selectedTab {
+                    case .bid:
+                        AuctionView()
+                    case .home:
+                        MainView()
+                        NavigationLink(
+                            "Make My House",
+                            destination: MakeHouseView()
+                        )
+
+                    case .schedule:
+                        ScheduleView()
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .navigationTitle("NetO")
-            .navigationBarTitleDisplayMode(.large)
         }
     }
 }

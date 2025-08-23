@@ -32,7 +32,21 @@
 		87B6077E2E597EAB009518A2 /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 87B6077D2E597EAB009518A2 /* FirebaseStorageCombine-Community */; };
 		87B607A22E59F07A009518A2 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 87B607A12E59F07A009518A2 /* GoogleSignIn */; };
 		87B607A42E59F07A009518A2 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 87B607A32E59F07A009518A2 /* GoogleSignInSwift */; };
+		87B608342E5A210B009518A2 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 87B608332E5A210B009518A2 /* Lottie */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		87B608262E5A1AE0009518A2 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		87B607402E597AF5009518A2 /* NetO_JunctionAsia2025.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NetO_JunctionAsia2025.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -64,6 +78,7 @@
 				87B607682E597EAB009518A2 /* FirebaseFirestore in Frameworks */,
 				87B607762E597EAB009518A2 /* FirebaseMessaging in Frameworks */,
 				87B607722E597EAB009518A2 /* FirebaseInstallations in Frameworks */,
+				87B608342E5A210B009518A2 /* Lottie in Frameworks */,
 				87B6076E2E597EAB009518A2 /* FirebaseFunctionsCombine-Community in Frameworks */,
 				87B6075E2E597EAB009518A2 /* FirebaseAuth in Frameworks */,
 				87B6075C2E597EAB009518A2 /* FirebaseAppDistribution-Beta in Frameworks */,
@@ -108,6 +123,7 @@
 				87B6073C2E597AF5009518A2 /* Sources */,
 				87B6073D2E597AF5009518A2 /* Frameworks */,
 				87B6073E2E597AF5009518A2 /* Resources */,
+				87B608262E5A1AE0009518A2 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -143,6 +159,7 @@
 				87B6077D2E597EAB009518A2 /* FirebaseStorageCombine-Community */,
 				87B607A12E59F07A009518A2 /* GoogleSignIn */,
 				87B607A32E59F07A009518A2 /* GoogleSignInSwift */,
+				87B608332E5A210B009518A2 /* Lottie */,
 			);
 			productName = NetO_JunctionAsia2025;
 			productReference = 87B607402E597AF5009518A2 /* NetO_JunctionAsia2025.app */;
@@ -175,6 +192,7 @@
 			packageReferences = (
 				87B607502E597EAB009518A2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				87B607A02E59F07A009518A2 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				87B608322E5A210B009518A2 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 87B607412E597AF5009518A2 /* Products */;
@@ -347,7 +365,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
@@ -392,7 +410,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
@@ -451,6 +469,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 9.0.0;
+			};
+		};
+		87B608322E5A210B009518A2 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -580,6 +606,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 87B607A02E59F07A009518A2 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignInSwift;
+		};
+		87B608332E5A210B009518A2 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 87B608322E5A210B009518A2 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
