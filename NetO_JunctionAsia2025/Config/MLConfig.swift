@@ -3,7 +3,7 @@ import Foundation
 // MARK: - ML 모델 설정
 struct MLConfig {
     // ML 모델 API 엔드포인트
-    static let predictionEndpoint = "https://predict-entgnwhmxq-uc.a.run.app"
+    static let predictionEndpoint = "https://us-central1-neto-junctionasia2025.cloudfunctions.net/ml"
     
     // 모델 버전 정보
     static let modelVersion = "v1.0.0"

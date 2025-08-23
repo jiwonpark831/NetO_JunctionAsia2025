@@ -4,11 +4,12 @@ struct EstimationView: View {
     @StateObject private var estimator = ConstructionEstimator()
     @State private var startDate = Date()
     @State private var size = ""
-    @State private var floor = ""
-    @State private var roomN = ""
-    @State private var restroomN = ""
-    @State private var selectedConstruct = "RC"
-    @State private var selectedMaterial = "중급"
+    @State private var floor_count = ""
+    @State private var room_count = ""
+    @State private var bathroom_count = ""
+    @State private var selectedConstructionType = "RC"
+    @State private var selectedMaterialGrade = "중급"
+    @State private var selectedSoilCondition = "보통"
     @State private var selectedConditions: Set<String> = []
     
     // 🚨 새로 추가된 상태 변수들
@@ -20,6 +21,7 @@ struct EstimationView: View {
     
     private let constructOptions = ["RC", "목구조", "철골"]
     private let materialOptions = ["기본", "중급", "고급", "프리미엄"]
+    private let soilConditionOptions = ["보통", "연약", "양호"]
     private let conditionOptions = ["도심", "펌프카제한", "소음규제", "지반연약", "장비양호"]
     private let accessConditionOptions = ["양호", "보통", "제한적", "매우제한적"]
     
@@ -52,7 +54,7 @@ struct EstimationView: View {
                             HStack {
                                 Text("층수")
                                     .frame(width: 80, alignment: .leading)
-                                TextField("층수 입력", text: $floor)
+                                TextField("층수 입력", text: $floor_count)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .keyboardType(.numberPad)
                             }
@@ -60,7 +62,7 @@ struct EstimationView: View {
                             HStack {
                                 Text("방 개수")
                                     .frame(width: 80, alignment: .leading)
-                                TextField("방 개수", text: $roomN)
+                                TextField("방 개수", text: $room_count)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .keyboardType(.numberPad)
                             }
@@ -68,7 +70,7 @@ struct EstimationView: View {
                             HStack {
                                 Text("화장실")
                                     .frame(width: 80, alignment: .leading)
-                                TextField("화장실 개수", text: $restroomN)
+                                TextField("화장실 개수", text: $bathroom_count)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .keyboardType(.numberPad)
                             }
@@ -88,7 +90,7 @@ struct EstimationView: View {
                             HStack {
                                 Text("구조")
                                     .frame(width: 80, alignment: .leading)
-                                Picker("구조 선택", selection: $selectedConstruct) {
+                                Picker("구조 선택", selection: $selectedConstructionType) {
                                     ForEach(constructOptions, id: \.self) { option in
                                         Text(option).tag(option)
                                     }
@@ -99,8 +101,19 @@ struct EstimationView: View {
                             HStack {
                                 Text("자재 등급")
                                     .frame(width: 80, alignment: .leading)
-                                Picker("자재 등급", selection: $selectedMaterial) {
+                                Picker("자재 등급", selection: $selectedMaterialGrade) {
                                     ForEach(materialOptions, id: \.self) { option in
+                                        Text(option).tag(option)
+                                    }
+                                }
+                                .pickerStyle(SegmentedPickerStyle())
+                            }
+                            
+                            HStack {
+                                Text("지반 상태")
+                                    .frame(width: 80, alignment: .leading)
+                                Picker("지반 상태 선택", selection: $selectedSoilCondition) {
+                                    ForEach(soilConditionOptions, id: \.self) { option in
                                         Text(option).tag(option)
                                     }
                                 }
@@ -251,15 +264,15 @@ struct EstimationView: View {
     }
     
     private var isFormValid: Bool {
-        !size.isEmpty && !floor.isEmpty && !roomN.isEmpty && !restroomN.isEmpty &&
-        Int(size) != nil && Int(floor) != nil && Int(roomN) != nil && Int(restroomN) != nil
+        !size.isEmpty && !floor_count.isEmpty && !room_count.isEmpty && !bathroom_count.isEmpty &&
+        Int(size) != nil && Int(floor_count) != nil && Int(room_count) != nil && Int(bathroom_count) != nil
     }
     
     private func calculateEstimation() {
         guard let sizeInt = Int(size),
-              let floorInt = Int(floor),
-              let roomNInt = Int(roomN),
-              let restroomNInt = Int(restroomN) else { return }
+              let floorInt = Int(floor_count),
+              let roomCountInt = Int(room_count),
+              let bathroomCountInt = Int(bathroom_count) else { return }
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -268,11 +281,12 @@ struct EstimationView: View {
         let request = EstimationRequest(
             startDate: startDateString,
             size: sizeInt,
-            floor: floorInt,
-            roomN: roomNInt,
-            restroomN: restroomNInt,
-            construct: selectedConstruct,
-            material: selectedMaterial,
+            floor_count: floorInt,
+            room_count: roomCountInt,
+            bathroom_count: bathroomCountInt,
+            construction_type: selectedConstructionType,
+            material_grade: selectedMaterialGrade,
+            soil_condition: selectedSoilCondition,
             conditionTags: Array(selectedConditions),
             accessCondition: selectedAccessCondition,
             noiseRestriction: noiseRestriction,
@@ -290,7 +304,40 @@ struct EstimationView: View {
                 print("🔄 ML 모델 실패, 로컬 견적으로 폴백")
                 let localEstimation = estimator.estimateLocal(request)
                 await MainActor.run {
-                    estimator.estimation = localEstimation
+                    // 로컬 견적을 새로운 구조로 변환
+                    estimator.estimation = EstimationResponse(
+                        predictions: Predictions(
+                            total_cost_krw: localEstimation.costKRW,
+                            total_duration_days: Int(localEstimation.durationDays),
+                            cost_confidence_interval: ConfidenceInterval(
+                                lower: Int(Double(localEstimation.costKRW) * 0.85),
+                                upper: Int(Double(localEstimation.costKRW) * 1.15)
+                            ),
+                            duration_confidence_interval: ConfidenceInterval(
+                                lower: Int(localEstimation.durationDays * 0.8),
+                                upper: Int(localEstimation.durationDays * 1.2)
+                            )
+                        ),
+                        input_features: InputFeatures(
+                            area: Int(size),
+                            floors: Int(floor_count),
+                            construction_type: selectedConstructionType,
+                            location: "로컬",
+                            complexity: "보통",
+                            material_grade: selectedMaterialGrade,
+                            access_condition: selectedAccessCondition,
+                            noise_restriction: noiseRestriction,
+                            pump_truck_restriction: pumpTruckRestriction,
+                            urban_area: urbanArea,
+                            winter_construction: winterConstruction
+                        ),
+                        model_info: ModelInfo(
+                            model_name: "로컬 계산기",
+                            version: "1.0.0",
+                            accuracy: 75.0,
+                            training_date: "N/A"
+                        )
+                    )
                     estimator.errorMessage = "ML 모델 연결 실패로 로컬 견적을 사용합니다."
                 }
             }

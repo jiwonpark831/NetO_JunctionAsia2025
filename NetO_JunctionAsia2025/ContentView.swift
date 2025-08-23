@@ -20,50 +20,24 @@ struct ContentView: View {
                 }
                 .tag(0)
             
-            // 표준단가 브라우저 탭
-            StandardPriceView()
-                .tabItem {
-                    Image(systemName: "list.bullet.clipboard")
-                    Text("표준단가")
-                }
-                .tag(1)
-            
-            // 견적 히스토리 탭
-            EstimationHistoryView()
-                .tabItem {
-                    Image(systemName: "clock.arrow.circlepath")
-                    Text("견적 히스토리")
-                }
-                .tag(2)
-            
             // 기존 기능들
             HomeView()
                 .tabItem {
                     Image(systemName: "house")
                     Text("홈")
                 }
-                .tag(3)
+                .tag(1)
             
-            MakeHouseView()
-                .tabItem {
-                    Image(systemName: "hammer")
-                    Text("집짓기")
-                }
-                .tag(4)
+
             
-            ScheduleView()
-                .tabItem {
-                    Image(systemName: "calendar")
-                    Text("일정")
-                }
-                .tag(5)
+
             
             AuctionView()
                 .tabItem {
                     Image(systemName: "gavel")
                     Text("경매")
                 }
-                .tag(6)
+                .tag(2)
         }
         .accentColor(.blue)
     }

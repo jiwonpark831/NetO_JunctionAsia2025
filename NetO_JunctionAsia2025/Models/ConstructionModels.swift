@@ -1,15 +1,91 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Firebase Functions 응답 모델 (새로운 구조)
+struct EstimationResponse: Codable {
+    let predictions: Predictions
+    let input_features: InputFeatures?
+    let model_info: ModelInfo?
+    
+    enum CodingKeys: String, CodingKey {
+        case predictions
+        case input_features
+        case model_info
+    }
+}
+
+struct Predictions: Codable {
+    let total_cost_krw: Int
+    let total_duration_days: Int
+    let cost_confidence_interval: ConfidenceInterval
+    let duration_confidence_interval: ConfidenceInterval
+}
+
+struct ConfidenceInterval: Codable {
+    let lower: Int
+    let upper: Int
+}
+
+struct InputFeatures: Codable {
+    let area: Int?
+    let floors: Int?
+    let construction_type: String?
+    let location: String?
+    let complexity: String?
+    let material_grade: String?
+    let access_condition: String?
+    let noise_restriction: Bool?
+    let pump_truck_restriction: Bool?
+    let urban_area: Bool?
+    let winter_construction: Bool?
+    
+    init(area: Int? = nil, floors: Int? = nil, construction_type: String? = nil, location: String? = nil, complexity: String? = nil, material_grade: String? = nil, access_condition: String? = nil, noise_restriction: Bool? = nil, pump_truck_restriction: Bool? = nil, urban_area: Bool? = nil, winter_construction: Bool? = nil) {
+        self.area = area
+        self.floors = floors
+        self.construction_type = construction_type
+        self.location = location
+        self.complexity = complexity
+        self.material_grade = material_grade
+        self.access_condition = access_condition
+        self.noise_restriction = noise_restriction
+        self.pump_truck_restriction = pump_truck_restriction
+        self.urban_area = urban_area
+        self.winter_construction = winter_construction
+    }
+}
+
+struct ModelInfo: Codable {
+    let model_name: String?
+    let version: String?
+    let accuracy: Double?
+    let training_date: String?
+}
+
+// MARK: - 기존 견적 응답 모델 (호환성 유지)
+struct LegacyEstimationResponse: Codable {
+    let durationDays: Double
+    let costKRW: Int
+    let confidence: String?
+    let explanation: String?
+    let breakdown: Breakdown?
+    
+    enum CodingKeys: String, CodingKey {
+        case durationDays = "duration_days"
+        case costKRW = "cost_krw"
+        case confidence, explanation, breakdown
+    }
+}
+
 // MARK: - 견적 입력 모델
 struct EstimationRequest: Codable {
     let startDate: String
     let size: Int              // 평수
-    let floor: Int             // 층수
-    let roomN: Int             // 방 개수
-    let restroomN: Int         // 화장실 개수
-    let construct: String      // RC | 목구조 | 철골 등
-    let material: String       // 중급 마감 등
+    let floor_count: Int             // 층수
+    let room_count: Int             // 방 개수
+    let bathroom_count: Int         // 화장실 개수
+    let construction_type: String      // RC | 목구조 | 철골 등
+    let material_grade: String       // 중급 마감 등
+    let soil_condition: String       // 지반 상태 (보통/연약/양호)
     let conditionTags: [String] // 도심, 펌프카제한, 소음규제 등
     
     // 🚨 새로 추가된 필드들
@@ -20,7 +96,14 @@ struct EstimationRequest: Codable {
     let winterConstruction: Bool  // 동절기 공사 여부
     
     enum CodingKeys: String, CodingKey {
-        case startDate, size, floor, roomN, restroomN, construct, material
+        case startDate = "start_date"
+        case size
+        case floor_count
+        case room_count
+        case bathroom_count
+        case construction_type
+        case material_grade
+        case soil_condition
         case conditionTags = "condition_tags"
         case accessCondition = "access_condition"
         case noiseRestriction = "noise_restriction"
@@ -30,7 +113,7 @@ struct EstimationRequest: Codable {
     }
 }
 
-// MARK: - API 응답 구조에 맞춘 모델들
+// MARK: - API 응답 구조에 맞춘 모델들 (기존 호환성)
 struct PredictionResponse: Codable {
     let predictions: Predictions
     let breakdown: Breakdown?
@@ -40,20 +123,6 @@ struct PredictionResponse: Codable {
         case predictions
         case breakdown
         case calculationInfo = "calculation_info"
-    }
-}
-
-struct Predictions: Codable {
-    let totalCostKRW: Int
-    let totalDurationDays: Int
-    let totalLaborHours: Double?
-    let hourlyWageUsed: Int?
-    
-    enum CodingKeys: String, CodingKey {
-        case totalCostKRW = "total_cost_krw"
-        case totalDurationDays = "total_duration_days"
-        case totalLaborHours = "total_labor_hours"
-        case hourlyWageUsed = "hourly_wage_used"
     }
 }
 
@@ -75,21 +144,6 @@ struct CalculationInfo: Codable {
         case source
         case calculationMethod = "calculation_method"
         case timestamp
-    }
-}
-
-// MARK: - 기존 견적 응답 모델 (호환성 유지)
-struct EstimationResponse: Codable {
-    let durationDays: Double
-    let costKRW: Int
-    let confidence: String?
-    let explanation: String?
-    let breakdown: Breakdown?
-    
-    enum CodingKeys: String, CodingKey {
-        case durationDays = "duration_days"
-        case costKRW = "cost_krw"
-        case confidence, explanation, breakdown
     }
 }
 
@@ -133,22 +187,23 @@ class ConstructionEstimator: ObservableObject {
         }
         
         do {
-            // 백엔드가 기대하는 형식으로 데이터 변환
+            // Firebase Functions가 기대하는 형식으로 데이터 변환
             let requestDict: [String: Any] = [
                 "start_date": request.startDate,
                 "size": request.size,
-                "floor": request.floor,
-                "room_n": request.roomN,
-                "restroom_n": request.restroomN,
-                "construct": request.construct,
-                "material": request.material,
+                "floor_count": request.floor_count,
+                "room_count": request.room_count,
+                "bathroom_count": request.bathroom_count,
+                "construction_type": request.construction_type,
+                "material_grade": request.material_grade,
+                "soil_condition": request.soil_condition,
                 "condition_tags": request.conditionTags,
                 "access_condition": request.accessCondition,
                 "noise_restriction": request.noiseRestriction,
                 "pump_truck_restriction": request.pumpTruckRestriction,
                 "urban_area": request.urbanArea,
                 "winter_construction": request.winterConstruction,
-                "total_rooms": request.roomN + request.restroomN,
+                "total_rooms": request.room_count + request.bathroom_count,
                 "project_type": "residential",
                 "timestamp": Date().timeIntervalSince1970
             ]
@@ -162,14 +217,15 @@ class ConstructionEstimator: ObservableObject {
             
             // 요청 데이터 로깅
             let requestData = try JSONSerialization.data(withJSONObject: requestDict)
-            print("📤 API 요청 데이터: \(String(data: requestData, encoding: .utf8) ?? "인코딩 실패")")
-            print("🌐 API 엔드포인트: \(url)")
+            print("📤 Firebase Functions 요청 데이터: \(String(data: requestData, encoding: .utf8) ?? "인코딩 실패")")
+            print("🌐 Firebase Functions 엔드포인트: \(url)")
+            print("🔍 요청 헤더: \(urlRequest.allHTTPHeaderFields ?? [:])")
             
             urlRequest.httpBody = requestData
             
             let (data, response) = try await URLSession.shared.data(for: urlRequest)
             
-            print("📥 API 응답 상태: \(response)")
+            print("📥 Firebase Functions 응답 상태: \(response)")
             
             if let httpResponse = response as? HTTPURLResponse {
                 print("📊 HTTP 상태 코드: \(httpResponse.statusCode)")
@@ -181,51 +237,108 @@ class ConstructionEstimator: ObservableObject {
                 
                 if httpResponse.statusCode == 200 {
                     do {
-                        // 새로운 API 응답 구조로 파싱 시도
-                        let predictionResponse = try JSONDecoder().decode(PredictionResponse.self, from: data)
-                        
-                        // 기존 EstimationResponse 형식으로 변환
-                        let estimation = EstimationResponse(
-                            durationDays: Double(predictionResponse.predictions.totalDurationDays),
-                            costKRW: predictionResponse.predictions.totalCostKRW,
-                            confidence: "실제 단가 계산",
-                            explanation: "market.csv 기반 정확한 단가 계산 - 총 노무시간: \(predictionResponse.predictions.totalLaborHours ?? 0)시간, 시급: \(predictionResponse.predictions.hourlyWageUsed ?? 0)원",
-                            breakdown: predictionResponse.breakdown
-                        )
+                        // Firebase Functions 응답 구조로 파싱
+                        let estimation = try JSONDecoder().decode(EstimationResponse.self, from: data)
                         
                         await MainActor.run {
                             self.estimation = estimation
                             self.isLoading = false
                         }
                         
-                        print("✅ ML 모델 견적 성공")
+                        print("✅ Firebase Functions 견적 성공")
                         
                     } catch let parsingError {
-                        print("⚠️ ML 모델 응답 파싱 실패: \(parsingError)")
+                        print("⚠️ Firebase Functions 응답 파싱 실패: \(parsingError)")
                         print("🔄 로컬 견적으로 자동 전환")
                         
-                        // ML 모델 파싱 실패 시 로컬 견적으로 자동 전환
+                        // Firebase Functions 파싱 실패 시 로컬 견적으로 자동 전환
                         let localEstimation = estimateLocal(request)
                         
                         await MainActor.run {
-                            self.estimation = localEstimation
-                            self.errorMessage = "ML 모델 연결에 실패하여 로컬 견적으로 계산했습니다. (응답 형식 오류)"
+                            // 로컬 견적을 새로운 구조로 변환
+                            self.estimation = EstimationResponse(
+                                predictions: Predictions(
+                                    total_cost_krw: localEstimation.costKRW,
+                                    total_duration_days: Int(localEstimation.durationDays),
+                                    cost_confidence_interval: ConfidenceInterval(
+                                        lower: Int(Double(localEstimation.costKRW) * 0.85),
+                                        upper: Int(Double(localEstimation.costKRW) * 1.15)
+                                    ),
+                                    duration_confidence_interval: ConfidenceInterval(
+                                        lower: Int(localEstimation.durationDays * 0.8),
+                                        upper: Int(localEstimation.durationDays * 1.2)
+                                    )
+                                ),
+                                input_features: InputFeatures(
+                                    area: request.size,
+                                    floors: request.floor_count,
+                                    construction_type: request.construction_type,
+                                    location: "로컬",
+                                    complexity: "보통",
+                                    material_grade: request.material_grade,
+                                    access_condition: request.accessCondition,
+                                    noise_restriction: request.noiseRestriction,
+                                    pump_truck_restriction: request.pumpTruckRestriction,
+                                    urban_area: request.urbanArea,
+                                    winter_construction: request.winterConstruction
+                                ),
+                                model_info: ModelInfo(
+                                    model_name: "로컬 계산기",
+                                    version: "1.0.0",
+                                    accuracy: 75.0,
+                                    training_date: "N/A"
+                                )
+                            )
+                            self.errorMessage = "Firebase Functions 연결에 실패하여 로컬 견적으로 계산했습니다. (응답 형식 오류)"
                             self.isLoading = false
                         }
                     }
                 } else {
-                    let errorMessage = "서버 오류: HTTP \(httpResponse.statusCode)"
+                    let errorMessage = "Firebase Functions 오류: HTTP \(httpResponse.statusCode)"
                     print("❌ \(errorMessage)")
                     
-                    // HTTP 404 등 서버 오류 시 로컬 견적으로 전환
+                    // HTTP 오류 시 로컬 견적으로 전환
                     let localEstimation = estimateLocal(request)
                     
                     await MainActor.run {
-                        self.estimation = localEstimation
+                        // 로컬 견적을 새로운 구조로 변환
+                        self.estimation = EstimationResponse(
+                            predictions: Predictions(
+                                total_cost_krw: localEstimation.costKRW,
+                                total_duration_days: Int(localEstimation.durationDays),
+                                cost_confidence_interval: ConfidenceInterval(
+                                    lower: Int(Double(localEstimation.costKRW) * 0.85),
+                                    upper: Int(Double(localEstimation.costKRW) * 1.15)
+                                ),
+                                duration_confidence_interval: ConfidenceInterval(
+                                    lower: Int(localEstimation.durationDays * 0.8),
+                                    upper: Int(localEstimation.durationDays * 1.2)
+                                )
+                            ),
+                            input_features: InputFeatures(
+                                area: request.size,
+                                floors: request.floor_count,
+                                construction_type: request.construction_type,
+                                location: "로컬",
+                                complexity: "보통",
+                                material_grade: request.material_grade,
+                                access_condition: request.accessCondition,
+                                noise_restriction: request.noiseRestriction,
+                                pump_truck_restriction: request.pumpTruckRestriction,
+                                urban_area: request.urbanArea,
+                                winter_construction: request.winterConstruction
+                            ),
+                            model_info: ModelInfo(
+                                model_name: "로컬 계산기",
+                                version: "1.0.0",
+                                accuracy: 75.0,
+                                training_date: "N/A"
+                            )
+                        )
                         if httpResponse.statusCode == 404 {
-                            self.errorMessage = "ML 모델 서버를 찾을 수 없습니다. 로컬 견적으로 계산했습니다."
+                            self.errorMessage = "Firebase Functions를 찾을 수 없습니다. 로컬 견적으로 계산했습니다."
                         } else {
-                            self.errorMessage = "ML 모델 서버 오류로 로컬 견적으로 계산했습니다. (HTTP \(httpResponse.statusCode))"
+                            self.errorMessage = "Firebase Functions 오류로 로컬 견적으로 계산했습니다. (HTTP \(httpResponse.statusCode))"
                         }
                         self.isLoading = false
                     }
@@ -234,21 +347,54 @@ class ConstructionEstimator: ObservableObject {
                 throw URLError(.badServerResponse)
             }
         } catch {
-            print("❌ API 호출 오류: \(error)")
+            print("❌ Firebase Functions 호출 오류: \(error)")
             
-            // 네트워크 오류 등으로 API 호출 자체가 실패한 경우 로컬 견적으로 전환
+            // 네트워크 오류 등으로 Firebase Functions 호출 자체가 실패한 경우 로컬 견적으로 전환
             let localEstimation = estimateLocal(request)
             
             await MainActor.run {
-                self.estimation = localEstimation
-                self.errorMessage = "ML 모델 연결 실패로 로컬 견적으로 계산했습니다. (네트워크 오류: \(error.localizedDescription))"
+                // 로컬 견적을 새로운 구조로 변환
+                self.estimation = EstimationResponse(
+                    predictions: Predictions(
+                        total_cost_krw: localEstimation.costKRW,
+                        total_duration_days: Int(localEstimation.durationDays),
+                        cost_confidence_interval: ConfidenceInterval(
+                            lower: Int(Double(localEstimation.costKRW) * 0.85),
+                            upper: Int(Double(localEstimation.costKRW) * 1.15)
+                        ),
+                        duration_confidence_interval: ConfidenceInterval(
+                            lower: Int(localEstimation.durationDays * 0.8),
+                            upper: Int(localEstimation.durationDays * 1.2)
+                        )
+                    ),
+                    input_features: InputFeatures(
+                        area: request.size,
+                        floors: request.floor_count,
+                        construction_type: request.construction_type,
+                        location: "로컬",
+                        complexity: "보통",
+                        material_grade: request.material_grade,
+                        access_condition: request.accessCondition,
+                        noise_restriction: request.noiseRestriction,
+                        pump_truck_restriction: request.pumpTruckRestriction,
+                        urban_area: request.urbanArea,
+                        winter_construction: request.winterConstruction
+                    ),
+                    model_info: ModelInfo(
+                        model_name: "로컬 계산기",
+                        version: "1.0.0",
+                        accuracy: 75.0,
+                        training_date: "N/A"
+                    )
+                )
+                self.errorMessage = "Firebase Functions 연결 실패로 로컬 견적으로 계산했습니다. (네트워크 오류: \(error.localizedDescription))"
                 self.isLoading = false
             }
         }
     }
     
-    // 표준단가 기반 로컬 견적 (ML 모델 없을 때 대체용)
-    func estimateLocal(_ request: EstimationRequest) -> EstimationResponse {
+    // 표준단가 기반 로컬 견적 (Firebase Functions 없을 때 대체용)
+    func estimateLocal(_ request: EstimationRequest) -> LegacyEstimationResponse {
         let baseCostPerPyung: Double = 2500000.0 // 기본 평당 단가
         let baseDurationPerPyung: Double = 1.2 // 기본 평당 소요일수
         
@@ -295,8 +441,8 @@ class ConstructionEstimator: ObservableObject {
         let conditionMultiplier: Double = request.conditionTags.contains("도심") ? 1.2 : 1.0
         
         // 보정계수 값들 가져오기
-        let materialMultiplierValue = materialMultiplier[request.material] ?? 1.0
-        let constructMultiplierValue = constructMultiplier[request.construct] ?? 1.0
+        let materialMultiplierValue = materialMultiplier[request.material_grade] ?? 1.0
+        let constructMultiplierValue = constructMultiplier[request.construction_type] ?? 1.0
         
         // 비용 계산을 단계별로 분리
         let sizeDouble = Double(request.size)
@@ -314,11 +460,11 @@ class ConstructionEstimator: ObservableObject {
         let conditionAdjustedDuration = constructAdjustedDuration * conditionMultiplier
         let estimatedDuration = conditionAdjustedDuration * additionalMultiplier
         
-        return EstimationResponse(
+        return LegacyEstimationResponse(
             durationDays: estimatedDuration,
             costKRW: estimatedCost,
             confidence: "로컬 계산",
-            explanation: "표준단가 기반 추정치입니다. (자재: \(request.material), 구조: \(request.construct), 접근성: \(request.accessCondition), 추가조건: \(request.conditionTags.joined(separator: ", "))) ML 모델 연결 후 더 정확한 견적을 받을 수 있습니다.",
+            explanation: "표준단가 기반 추정치입니다. (자재: \(request.material_grade), 구조: \(request.construction_type), 접근성: \(request.accessCondition), 추가조건: \(request.conditionTags.joined(separator: ", "))) Firebase Functions 연결 후 더 정확한 견적을 받을 수 있습니다.",
             breakdown: nil // 로컬 계산은 breakdown 정보를 제공하지 않음
         )
     }

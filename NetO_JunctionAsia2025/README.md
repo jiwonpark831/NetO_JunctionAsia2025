@@ -12,17 +12,9 @@
 - **특수 조건**: 도심, 펌프카제한, 소음규제, 지반연약, 장비양호
 - **실시간 견적**: ML 모델 또는 로컬 계산을 통한 예측
 
-### 2. 표준단가 브라우저 (StandardPriceView)
-- **카테고리별 분류**: 가설공사, 토공사, 말뚝·지지공, 철거공사, 흙운반, 옹벽·배면채움
-- **검색 기능**: 공종명 또는 코드로 빠른 검색
-- **보정계수**: 조건별 단가 및 노무비율 보정계수 표시
-- **상세 정보**: 공종별 상세 스펙 및 적용 조건
 
-### 3. 견적 히스토리 (EstimationHistoryView)
-- **견적 기록**: 과거 견적 내역 및 결과
-- **필터링**: 기간별, 조건별 검색 및 필터
-- **품질 지표**: ML 모델 신뢰도, 정확도, 모델 버전
-- **상태 추적**: API 응답 상태 및 오류 정보
+
+
 
 ## 🚀 기술 스택
 
@@ -49,7 +41,7 @@ struct EstimationRequest: Codable {
     let startDate: String      // 착공일
     let size: Int             // 평수
     let floor: Int            // 층수
-    let roomN: Int            // 방 개수
+    let room_count: Int            // 방 개수
     let restroomN: Int        // 화장실 개수
     let construct: String     // 구조 (RC/목구조/철골)
     let material: String      // 자재 등급
@@ -94,17 +86,9 @@ open NetO_JunctionAsia2025.xcodeproj
 5. **견적 계산** 버튼 클릭
 6. 결과 확인 (공사 기간, 비용, 평당 단가)
 
-### 표준단가 확인하기
-1. **표준단가** 탭 선택
-2. 카테고리 선택 (가설공사, 토공사 등)
-3. 검색어 입력으로 특정 공종 찾기
-4. 공종 선택하여 상세 정보 및 보정계수 확인
 
-### 견적 히스토리 보기
-1. **견적 히스토리** 탭 선택
-2. 기간별 필터 적용
-3. 검색어로 특정 프로젝트 찾기
-4. 상세 정보 펼쳐보기
+
+
 
 ## 🔮 향후 개발 계획
 
@@ -134,8 +118,8 @@ NetO_JunctionAsia2025/
 ├── Feature/
 │   ├── EstimationView.swift          # 견적 계산 뷰
 │   ├── EstimationResultView.swift    # 견적 결과 뷰
-│   ├── StandardPriceView.swift       # 표준단가 브라우저
-│   └── EstimationHistoryView.swift   # 견적 히스토리
+
+
 ├── Config/
 │   └── MLConfig.swift                # ML 설정
 ├── Construction unit price.json      # 표준단가 데이터
