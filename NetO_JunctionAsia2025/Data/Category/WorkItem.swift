@@ -20,7 +20,6 @@ struct WorkItem: Codable, Identifiable {
 
 func loadWorkItems(from fileName: String) -> [String: [WorkItem]] {
     guard let url = Bundle.main.url(forResource: fileName, withExtension: "json") else {
-        print("❌ File not found: \(fileName).json")
         return [:]
     }
 
