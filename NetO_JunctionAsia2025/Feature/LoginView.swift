@@ -8,12 +8,16 @@
 import SwiftUI
 
 struct LoginView: View {
-    @StateObject private var manager = GoogleSignInManager()
+    @StateObject private var manager = GoogleSignInManager.shared
 
     var body: some View {
         VStack {
             if manager.isLogin {
-                HomeView()
+                if manager.showOnboarding {
+                    OnboardingView()
+                } else {
+                    HomeView()
+                }
             } else {
                 Button(action: {
                     manager.signIn()
