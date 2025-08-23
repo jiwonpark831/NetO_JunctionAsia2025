@@ -16,42 +16,74 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text("Have you prepared any land to build a house?")
+            Text("Q. Have you prepared any land to build a house?").fontWeight(
+                .black
+            ).font(.system(size: 18))
 
             Toggle("Yes, I’ve prepared", isOn: $checkbox[0])
-                .toggleStyle(CheckboxToggleStyle(style: .circle))
-                .padding()
+                .toggleStyle(CheckboxToggleStyle(style: .circle)).padding(
+                    .top,
+                    10
+                )
+
+                .fontWeight(.regular).font(.system(size: 14))
             Text(
-                "Do you have a blueprint that you received from the architect?"
-            )
+                "Q. Do you have a blueprint that you received from the architect?"
+            ).fontWeight(.black).font(.system(size: 18))
+                .padding(.top, 25)
 
             Toggle("Yes, I have", isOn: $checkbox[1])
                 .toggleStyle(CheckboxToggleStyle(style: .circle))
-                .padding()
-            Text("Did you get a building permit?")
+                .padding().fontWeight(.regular).font(.system(size: 14)).padding(
+                    .top,
+                    10
+                )
+            Text("Q. Did you get a building permit?").fontWeight(.black).font(
+                .system(size: 18)
+            ).padding(.top, 25)
 
             Toggle("Yes, I did", isOn: $checkbox[2])
                 .toggleStyle(CheckboxToggleStyle(style: .circle))
-                .padding()
-            Text("Does the building have a floor area of less than 200m² ?")
+                .padding().fontWeight(.regular).font(.system(size: 14)).padding(
+                    .top,
+                    10
+                )
+            Text("Q. Does the building have a floor area of less than 200m² ?")
+                .fontWeight(.black).font(.system(size: 18)).padding(.top, 25)
 
             Toggle("Yes, I does", isOn: $checkbox[3])
                 .toggleStyle(CheckboxToggleStyle(style: .circle))
                 .padding()
-
+                .fontWeight(.regular).font(.system(size: 14)).padding(.top, 10)
+                .padding(.bottom, 30)
             Button {
                 manager.showOnboarding = false
             } label: {
                 Text("Go to next step")
-                    .frame(maxWidth: .greatestFiniteMagnitude)
+                    .frame(maxWidth: 140)
                     .padding(.vertical, 14)
-
+                    .fontWeight(.black)
+                    .font(.system(size: 15))
+                    .foregroundColor(.white)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        .jaorange, .jayellow,
+                                    ]),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                    )
             }
-            .background(.orange)
-            .foregroundStyle(.white)
             .disabled(!allAgree)
             .opacity(allAgree ? 1 : 0.5)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
+        .padding(.leading, 30)
+        .padding(.trailing, 30)
     }
 }
 
@@ -72,7 +104,7 @@ struct CheckboxToggleStyle: ToggleStyle {
                             : style.sfSymbolName
                     )
                     .imageScale(.large)
-                    .foregroundColor(Color.orange)
+                    .foregroundColor(.jaorange)
                     configuration.label
                 }
             }

@@ -19,16 +19,33 @@ struct LoginView: View {
                     HomeView()
                 }
             } else {
+                Spacer().frame(height: 100)
+                Image("biglogo")
+                Spacer().frame(height: 50)
+                Text("where construction connects")
+                Spacer().frame(height: 40)
+                Text("arch").font(Font.largeTitle)
+                Spacer().frame(height: 80)
                 Button(action: {
                     manager.signIn()
                 }) {
-                    Text("Log in with Google account")
-                        .background(.white)
-                        .foregroundColor(.orange)
-                        .cornerRadius(10)
+                    Text("Log in with Google account").fontWeight(.bold)
+
                 }
+                .padding(15)
+                .background(.white)
+                .foregroundColor(.jaorange)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.jaorange, lineWidth: 1)
+                )
+                Image("building").frame(
+                    maxHeight: .infinity,
+                    alignment: .bottom
+                )
             }
-        }
+        }.ignoresSafeArea(edges: .bottom)
+
     }
 }
 
