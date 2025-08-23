@@ -7,20 +7,41 @@
 
 import SwiftUI
 
-struct CategorySelectView: View {
-    @State private var selectedMain: MainCategory = .foundation
-    let onSelect: (String) -> Void   // 선택 결과를 AuctionView로 전달
+struct CategorySelection {
+    let main: MainCategory
+    let sub: String
+}
 
+struct CategorySelectView: View {
+    let onSelect: (MainCategory, String) -> Void
+    @State private var selectedMain: MainCategory = .basic
+    @Environment(\.dismiss) var dismiss
+    
     var body: some View {
         VStack(spacing: 0) {
             // 상단 헤더
             HStack {
-//                Text("Select Category")
-//                    .font(.headline)
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(Color(hex: "626262"))
+                }
+                
                 Spacer()
+                Text("Select Category")
+                    .font(.headline)
+                    .foregroundColor(Color(hex: "FF7F17"))
+                Spacer()
+                Button(action: {
+                
+                }) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(Color(hex: "626262"))
+                }
             }
             .padding()
-
+            
             HStack(spacing: 0) {
                 // 왼쪽: 메인 카테고리
                 ScrollView {
@@ -43,22 +64,26 @@ struct CategorySelectView: View {
                     }
                     .padding()
                 }
-                .frame(width: 200)
+                .frame(width: 170)
                 .background(Color(hex: "ECECEC"))
-
+                
                 Divider()
-
+                
                 // 오른쪽: 서브카테고리
                 ScrollView {
                     VStack(spacing: 12) {
                         ForEach(selectedMain.subcategories, id: \.self) { sub in
                             Button {
-                                onSelect(sub) // 선택 후 값 전달
+                                onSelect(selectedMain, sub)
+                                dismiss()
                             } label: {
-                                Text(sub)
-                                    .foregroundStyle(Color.black)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding()
+                                HStack {
+                                    Text(sub)
+                                        .foregroundStyle(Color.black)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding()
                             }
                         }
                     }
@@ -66,13 +91,11 @@ struct CategorySelectView: View {
                 }
             }
         }
-        .navigationTitle("Select Category")
-//        .navigationBarTitleDisplayMode(.inline)
-//        .toolbarColorScheme(.dark, for: .navigationBar)
-//        .toolbarBackground(Color.white, for: .navigationBar)
+        .navigationBarBackButtonHidden(true) // 기본 백버튼 숨기기
+        .navigationBarHidden(true)
     }
 }
 
 #Preview {
-    CategorySelectView { _ in }
+    CategorySelectView { _, _ in }
 }
