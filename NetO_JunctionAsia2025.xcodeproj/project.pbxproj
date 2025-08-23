@@ -30,6 +30,8 @@
 		87B6077A2E597EAB009518A2 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 87B607792E597EAB009518A2 /* FirebaseRemoteConfig */; };
 		87B6077C2E597EAB009518A2 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 87B6077B2E597EAB009518A2 /* FirebaseStorage */; };
 		87B6077E2E597EAB009518A2 /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 87B6077D2E597EAB009518A2 /* FirebaseStorageCombine-Community */; };
+		87B607A22E59F07A009518A2 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 87B607A12E59F07A009518A2 /* GoogleSignIn */; };
+		87B607A42E59F07A009518A2 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 87B607A32E59F07A009518A2 /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -66,8 +68,10 @@
 				87B6075E2E597EAB009518A2 /* FirebaseAuth in Frameworks */,
 				87B6075C2E597EAB009518A2 /* FirebaseAppDistribution-Beta in Frameworks */,
 				87B607702E597EAB009518A2 /* FirebaseInAppMessaging-Beta in Frameworks */,
+				87B607A22E59F07A009518A2 /* GoogleSignIn in Frameworks */,
 				87B607642E597EAB009518A2 /* FirebaseCrashlytics in Frameworks */,
 				87B607662E597EAB009518A2 /* FirebaseDatabase in Frameworks */,
+				87B607A42E59F07A009518A2 /* GoogleSignInSwift in Frameworks */,
 				87B607742E597EAB009518A2 /* FirebaseMLModelDownloader in Frameworks */,
 				87B6077C2E597EAB009518A2 /* FirebaseStorage in Frameworks */,
 				87B607622E597EAB009518A2 /* FirebaseCore in Frameworks */,
@@ -137,6 +141,8 @@
 				87B607792E597EAB009518A2 /* FirebaseRemoteConfig */,
 				87B6077B2E597EAB009518A2 /* FirebaseStorage */,
 				87B6077D2E597EAB009518A2 /* FirebaseStorageCombine-Community */,
+				87B607A12E59F07A009518A2 /* GoogleSignIn */,
+				87B607A32E59F07A009518A2 /* GoogleSignInSwift */,
 			);
 			productName = NetO_JunctionAsia2025;
 			productReference = 87B607402E597AF5009518A2 /* NetO_JunctionAsia2025.app */;
@@ -168,6 +174,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				87B607502E597EAB009518A2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				87B607A02E59F07A009518A2 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 87B607412E597AF5009518A2 /* Products */;
@@ -329,6 +336,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "NetO-JunctionAsia2025-Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -373,6 +381,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "NetO-JunctionAsia2025-Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -434,6 +443,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 12.1.0;
+			};
+		};
+		87B607A02E59F07A009518A2 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -553,6 +570,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 87B607502E597EAB009518A2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = "FirebaseStorageCombine-Community";
+		};
+		87B607A12E59F07A009518A2 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 87B607A02E59F07A009518A2 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		87B607A32E59F07A009518A2 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 87B607A02E59F07A009518A2 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

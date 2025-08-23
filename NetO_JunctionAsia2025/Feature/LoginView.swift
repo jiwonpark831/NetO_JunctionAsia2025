@@ -8,8 +8,27 @@
 import SwiftUI
 
 struct LoginView: View {
+    @StateObject private var manager = GoogleSignInManager.shared
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            if manager.isLogin {
+                if manager.showOnboarding {
+                    OnboardingView()
+                } else {
+                    HomeView()
+                }
+            } else {
+                Button(action: {
+                    manager.signIn()
+                }) {
+                    Text("Log in with Google account")
+                        .background(.white)
+                        .foregroundColor(.orange)
+                        .cornerRadius(10)
+                }
+            }
+        }
     }
 }
 
