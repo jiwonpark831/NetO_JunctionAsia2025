@@ -591,8 +591,8 @@ struct MakeHouseView: View {
                     area: stepData.size,
                     floors: stepData.floor_count,
                     construction_type: stepData.construction_type,
-                    location: "로컬",
-                    complexity: "보통",
+                                location: "Local",
+            complexity: "Normal",
                     material_grade: stepData.material_grade,
                     access_condition: stepData.access_condition,
                     noise_restriction: stepData.noise_restriction,
@@ -601,7 +601,7 @@ struct MakeHouseView: View {
                     winter_construction: stepData.winter_construction
                 ),
                 model_info: ModelInfo(
-                    model_name: "로컬 계산기",
+                    model_name: "Local Calculator",
                     version: "1.0.0",
                     accuracy: 75.0,
                     training_date: "N/A"
@@ -902,7 +902,7 @@ struct SummaryView: View {
                 } else {
                     // 견적이 계산되지 않은 경우 안내 메시지
                     VStack(alignment: .leading, spacing: 15) {
-                        Text("견적 계산이 필요합니다")
+                        Text("Estimation calculation is required")
                             .font(.title2).bold()
                             .padding(.bottom, 10)
 
@@ -972,7 +972,7 @@ struct SummaryView: View {
 
     private func saveToFirebase() {
         guard let userId = Auth.auth().currentUser?.uid else {
-            alertMessage = "데이터를 저장하려면 로그인이 필요합니다."
+            alertMessage = "Login is required to save data."
             showAlert = true
             return
         }
@@ -1000,7 +1000,7 @@ struct SummaryView: View {
             userDocRef.setData(saveData, merge: true) { error in
                 isSaving = false
                 if let error = error {
-                    alertMessage = "저장 실패: \(error.localizedDescription)"
+                    alertMessage = "Save failed: \(error.localizedDescription)"
                 } else {
                     alertMessage = "Save succeeded"
                 }
@@ -1008,7 +1008,7 @@ struct SummaryView: View {
             }
         } catch let error {
             isSaving = false
-            alertMessage = "데이터 저장 실패: \(error.localizedDescription)"
+            alertMessage = "Data save failed: \(error.localizedDescription)"
             showAlert = true
         }
     }
