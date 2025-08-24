@@ -26,8 +26,7 @@ struct HomeView: View {
 
                 HStack {
                     VStack {
-                        Text("Welcome,")
-                        Text("\(manager.userData.username)").font(
+                        Text("Welcome, \(manager.userData.username)").font(
                             .system(size: 16, weight: .bold)
                         )
                     }.padding(.leading, 20)
