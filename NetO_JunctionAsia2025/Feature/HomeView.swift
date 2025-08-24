@@ -16,6 +16,7 @@ enum Tab {
 struct HomeView: View {
     @StateObject private var manager = GoogleSignInManager.shared
     @State private var selectedTab: Tab = .home
+    @State private var showMakeHouseView = false
 
     var body: some View {
         NavigationStack {
@@ -90,9 +91,14 @@ struct HomeView: View {
                         MainView()
                         Spacer().frame(height: 70)
                         NavigationLink(
-                            "LET’S GET PLANNED",
-                            destination: MakeHouseView()
-                        ).frame(maxWidth: 200)
+                            destination: MakeHouseView(
+                                isPresented: $showMakeHouseView
+                            ),  // Binding 전달
+                            isActive: $showMakeHouseView
+                        ) {
+                            Text("LET’S GET PLANNED")
+                            // ... (버튼 스타일은 그대로) ...
+                        }.frame(maxWidth: 200)
                             .padding(.vertical, 14)
                             .fontWeight(.black)
                             .font(.system(size: 15))
@@ -111,7 +117,7 @@ struct HomeView: View {
                             )
 
                     case .schedule:
-                       ScheduleView()
+                        ScheduleView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
