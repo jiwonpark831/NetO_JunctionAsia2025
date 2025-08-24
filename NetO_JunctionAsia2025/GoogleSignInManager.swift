@@ -23,7 +23,7 @@ class GoogleSignInManager: ObservableObject {
 
     @Published var userData = UserData()
     @Published var isLogin = false
-    @Published var showOnboarding: Bool = false
+    @Published var showOnboarding: Bool = true
 
     private init() {
         checkLoginStatus()
